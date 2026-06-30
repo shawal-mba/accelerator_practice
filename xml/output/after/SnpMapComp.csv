@@ -1,0 +1,4 @@
+object_class,Alias,BusinessName,CompTypeVersion,Descript,Description,GlobalId,IMapComp,IMapCompType,IMapRef,IOwnerMapComp,IOwnerMapping,ITechno,IsCardinal,IsDerivedName,IsHidden,Name,PropValues,SortPos,TypeName
+SnpMapComp,null,null,null,null,null,744c06a7-5a31-491b-a570-31de406f7064,191370,1,1828814,null,33424,null,0,1,0,d_pmt_meth_type,null,2,DATASTORE
+SnpMapComp,null,null,null,null,null,99bc84dc-169d-4554-9cf4-caf92c9330f6,191368,1,1828813,null,33424,null,0,1,0,pmt_meth_type,null,0,DATASTORE
+SnpMapComp,null,null,null,null,null,940cecf1-a48c-49eb-ac52-dbc0c38e6d7c,191369,2,null,null,33424,null,0,0,0,FILTER,null,1,FILTER

@@ -1,0 +1,3 @@
+object_class,BusinessName,Descript,Description,GlobalId,IEndMapCp,IMapConn,IOwnerMapping,IStartMapCp,IsHidden,Name
+SnpMapConn,null,null,null,6e2ac5ff-c15e-43ee-8dda-61a1bad764e0,404956,142060,33424,404955,0,PMT_METH_TYPE.OUTPUT1_TO_FILTER.INPUT1
+SnpMapConn,null,null,null,f767b30a-68f1-4886-b079-b95c03200858,404958,142061,33424,404957,0,FILTER.OUTPUT1_TO_D_PMT_METH_TYPE.INPUT1

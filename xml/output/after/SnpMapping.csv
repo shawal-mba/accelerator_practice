@@ -1,0 +1,2 @@
+object_class,BusinessName,Descript,Description,ExtVersion,FirstDate,FirstUser,GlobalId,IContextMapRef,IFolder,IMapping,IProject,IScBaseMapping,IScMapping,IScOrigMapping,IndChange,IntVersion,IsReusable,LastDate,LastUser,MetadataVersion,Name,PropValues,ScOrigMappingTag
+SnpMapping,null,null,null,null,2026-06-16 20:37:17.0,ENDER,fa4adfd8-3d3b-402f-9728-c31209f76e0c,null,4111,33424,null,null,null,null,U,5,N,2026-06-16 21:15:50.0,ENDER,12,Test_3,null,null

@@ -1,0 +1,2 @@
+object_class,BusinessName,CleanupOnError,Descript,Description,GlobalId,IDeploySpec,IMapRef,IOwnerMapping,IsConcurrent,IsFrozen,LogStagelocName,Name,SyncReqd
+SnpDeploySpec,null,0,null,null,0d08ed00-4eb7-492c-a0eb-95d2d8575094,33413,1828836,33424,0,0,null,Physical,0

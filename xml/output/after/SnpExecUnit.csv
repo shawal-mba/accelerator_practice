@@ -1,0 +1,2 @@
+object_class,BusinessName,Descript,Description,GenType,GlobalId,IEuKmRef,IExecUnit,IExecUnitGrp,ILschemaRef,IOwnerDs,IParExecUnit,IsTap,LschemaName,MultiConGenType,Name,OptClassName
+SnpExecUnit,Copy_of_BQ_EDW_SEM_UNIT,null,null,null,99180bfb-66b7-4863-a552-49688669fa0f,1828834,33428,33424,1828829,33413,null,null,null,null,Copy_of_BQ_EDW_SEM_UNIT,null

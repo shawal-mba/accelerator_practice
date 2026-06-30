@@ -1,0 +1,8 @@
+object_class,Alias,AttrPos,AttrType,BusinessName,DataTypeName,Descript,Description,ExtDtQualName,FirstDate,FirstUser,GlobalId,GrpFunc,IDataMapRef,IMapAttr,IMapRef,IOwnerMapCp,IParMapAttr,IndChange,IntDtQualName,IntVersion,IsDerivedName,IsRequired,LastDate,LastUser,Length,Name,Prec,PropValues,Scale,SortPos,SourceDt
+SnpMapAttr,null,null,P,null,null,null,null,null,null,null,d56af716-c985-435f-81fe-66d430572180,AUTO,1828819,1403552,1828820,404959,null,null,null,null,1,0,null,null,100,Pmt_Meth_Type_Nm,null,null,null,3,null
+SnpMapAttr,null,null,P,null,null,null,null,null,null,null,a4f55ba2-d632-4c87-9808-e9fabc3afc6c,AUTO,1828819,1403548,1828818,404955,null,null,null,null,1,0,null,null,100,Pmt_Meth_Type_Nm,null,null,0,2,null
+SnpMapAttr,null,null,P,null,null,null,null,null,null,null,0e605c97-2de9-458d-91e7-712cdb62ab33,AUTO,1828824,1403550,1828823,404955,null,null,null,null,1,0,null,null,26,Prcss_Clsd_Dttm,null,null,0,5,null
+SnpMapAttr,null,null,P,null,null,null,null,null,null,null,c189c8b6-024d-46e8-b54f-325abf23206e,AUTO,1828819,1403553,1828822,404959,null,null,null,null,1,0,null,null,250,Pmt_Meth_Type_Desc,null,null,null,4,null
+SnpMapAttr,null,null,P,null,null,null,null,null,null,null,3cc32c59-8124-4e4a-ae5f-b44af45ff3c1,AUTO,1828819,1403549,1828821,404955,null,null,null,null,1,0,null,null,250,Pmt_Meth_Type_Desc,null,null,0,3,null
+SnpMapAttr,null,null,P,null,null,null,null,null,null,null,8af72fef-4994-4f75-a2ae-d96aca6ce673,AUTO,1828816,1403551,1828817,404959,null,null,null,null,1,1,null,null,20,Pmt_Meth_Type_Cd,null,null,null,2,null
+SnpMapAttr,null,null,P,null,null,null,null,null,null,null,7984d970-dcd7-4bfb-8970-b5975dbd8b29,AUTO,1828816,1403547,1828815,404955,null,null,null,null,1,1,null,null,20,Pmt_Meth_Type_Cd,null,null,0,1,null

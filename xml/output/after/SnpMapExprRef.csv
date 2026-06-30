@@ -1,0 +1,7 @@
+object_class,GlobalId,IMapExprRef,IOwnerMapExpr,IRefMapAttr,IRefMapComp,IRefMapRef,IScopingMapCp,IsValid,RefKey,RefText
+SnpMapExprRef,fe0c5d45-c9c8-4619-849d-aaebd8fd5195,977490,982208,1403548,null,null,404958,0,R0,pmt_meth_type.pmt_meth_type_nm
+SnpMapExprRef,ec775421-4c24-4449-8b62-7a26b9390dd5,977492,982212,1403550,null,null,404956,0,R0,pmt_meth_type.prcss_clsd_dttm
+SnpMapExprRef,2958dc66-6f7d-4c25-a2a8-5cf627a79480,977494,982213,1403554,null,null,404958,0,R0,pmt_meth_type.pmt_meth_type_desc
+SnpMapExprRef,8b112c9f-061d-4ee8-8423-cea77b3209f2,977489,982207,1403547,null,null,404958,0,R0,pmt_meth_type.pmt_meth_type_cd
+SnpMapExprRef,0063c8d5-0035-4eaf-89b2-9e09b508d259,977495,982215,1403547,null,null,404958,0,R0,pmt_meth_type.pmt_meth_type_cd
+SnpMapExprRef,c4b364fe-f922-432f-9cea-f020f55551d2,977493,982212,1403547,null,null,404956,0,R1,pmt_meth_type.pmt_meth_type_cd

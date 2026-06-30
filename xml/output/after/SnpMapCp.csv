@@ -1,0 +1,7 @@
+object_class,BusinessName,Cardinality,CompSubType,CpOrder,CpPos,Descript,Description,Direction,GlobalId,IMapCp,IMapCpRole,IMapRef,IOwnerMapComp,IParMapCp,Name
+SnpMapCp,null,M,null,1,null,null,null,O,72968760-2cf5-4b7a-b905-1e843850cadb,404959,2,null,191370,null,OUTPUT1
+SnpMapCp,null,M,null,1,null,null,null,I,d30d3df7-3944-4c11-ba23-45b769676430,404958,1,null,191370,null,INPUT1
+SnpMapCp,null,M,null,1,null,null,null,O,da192690-bfc0-4931-ada0-344b7e2b083e,404955,2,null,191368,null,OUTPUT1
+SnpMapCp,null,M,null,1,null,null,null,I,169fedbb-4c60-4ff2-85c1-8e68de9cc989,404956,3,null,191369,null,INPUT1
+SnpMapCp,null,M,null,1,null,null,null,O,2728cbab-cdb7-447d-8bc5-475f38718292,404957,4,null,191369,null,OUTPUT1
+SnpMapCp,null,M,null,1,null,null,null,I,1561c033-4e38-4735-8260-9e798925669d,404954,1,null,191368,null,INPUT1

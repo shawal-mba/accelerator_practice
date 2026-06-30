@@ -1,0 +1,4 @@
+object_class,BusinessName,Descript,Description,GlobalId,HintSyncState,ICheckKm,IExecUnit,IMapComp,IMapCp,IMapRef,IMapRefCp,IOwnerDs,IParPhyNode,IPhyNode,IRefPhyNode,ISrcCompKm,ITgtCompKm,IndFixedByHint,IndFixedByTechno,IsFixedEu,Name,NodeType,RefCompName,RefCpName,RefDsInputCp,StageTableName
+SnpPhyNode,null,null,null,46119aaf-1525-435f-b04a-69e3899a55f3,null,null,33428,191370,404959,null,null,33413,null,175591,null,null,1828837,0,0,0,D_PMT_METH_TYPE,B,null,null,null,null
+SnpPhyNode,null,null,null,bb56baf0-dc96-4b16-bf88-a52bec2a334d,null,null,33428,191369,404957,null,null,33413,175591,175592,null,1828832,null,0,0,0,FILTER,B,null,null,null,null
+SnpPhyNode,null,null,null,04ee814f-9336-4226-bcba-54c9f45edf4f,null,null,33428,191368,404955,null,null,33413,175592,175593,null,1828833,null,0,0,0,PMT_METH_TYPE,B,null,null,null,null
