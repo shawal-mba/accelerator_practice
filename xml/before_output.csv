@@ -1,0 +1,220 @@
+object_class,AdapterIntfType,AdapterName,Alias,AttrPos,AttrType,BusinessName,Cardinality,CompSubType,CompTypeVersion,CpOrder,CpPos,DataTypeName,Descript,Description,Direction,DispNameKey,ExecOnHint,ExpTxtNb,ExtDtQualName,ExtVersion,FcoGuid,FcoQualifiedName,FcoQualifiedName2,FcoQualifiedName3,FirstDate,FirstUser,GlobalId,GrpFunc,HasUnparsedIdent,IContextMapRef,IDataMapRef,IDeploySpec,IDisTechRef,IEndMapCp,IExOnLsRef,IExecUnit,IFcoId,IFolder,IMapAttr,IMapComp,IMapCompType,IMapConn,IMapCp,IMapCpRole,IMapExpr,IMapExprRef,IMapProp,IMapPropParent,IMapRef,IMapping,IOwnerMapAttr,IOwnerMapComp,IOwnerMapCp,IOwnerMapExpr,IOwnerMapProp,IOwnerMapping,IParMapAttr,IParMapCp,IPhyNode,IProject,IPropDef,IPropXrefValue,IRefId,IRefMapAttr,IRefMapComp,IRefMapRef,IScBaseMapping,IScId,IScMapping,IScOrigMapping,IScopingMapCp,IStartMapCp,ITechno,IndChange,InstObjNb,IntDtQualName,IntVersion,IsActive,IsCardinal,IsDerivedName,IsHidden,IsParsed,IsRequired,IsReusable,IsValid,JoinColNb,JoinNb,KeyColNb,KeyNb,LastDate,LastUser,Length,LinkDiagNb,MetadataVersion,MorigTxtNb,MtxtNb,Name,OdiVersion,OrigTxtNb,OriginRepositoryID,OtherObjectsNb,ParsedText,ParsedTxt,PlanAgentNb,Prec,PropDefGuid,PropDefQualifiedName,PropOrder,PropType,PropValue,PropValues,QualifiedName,QualifiedName2,QualifiedName3,RefCount,RefGuid,RefKey,RefObjFQName,RefObjFQNameLengths,RefObjFQType,RefObjGlobalId,RefText,RepositoryVersion,ScGuid,ScOrigMappingTag,Scale,ScenTxtNb,SortPos,SourceDt,StepNb,Text,TextHash,TextOnly,Txt,TxtNb,TypeName,UeOrigNb,UeUsedNb,ValidationCode,VarPlanAgentNb
+SnpMapping,,,,,,null,,,,,,,null,null,,,,,,null,,,,,2026-06-16 20:37:17.0,ENDER,fa4adfd8-3d3b-402f-9728-c31209f76e0c,,,null,,,,,,,,4111,,,,,,,,,,,,33424,,,,,,,,,,null,,,,,,,null,,null,null,,,,I,,,1,,,,,,,N,,,,,,2026-06-16 20:37:17.0,ENDER,,,12,,,Test_3,,,,,,,,,,,,,,null,,,,,,,,,,,,,,null,,,,,,,,,,,,,,,
+SnpMapRef,IColumn,ODI,,,,null,,,,,,,,null,,,,,,,null,IDataStore,null,null,null,null,564063c3-7020-4b9b-be8e-0f9771e4881d,,,,,,,,,,8583,,,,,,,,,,,,1828820,,,,,,,33424,,,,,,,169332,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,Pmt_Meth_Type_Nm,null,null,1,8f0953e2-76cd-49d4-a611-72b0368ccd71,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapRef,IDataStore,ODI,,,,null,,,,,,,,null,,,,,,,null,null,null,null,null,null,e658b581-62c1-41b5-a73b-1615dd746cd2,,,,,,,,,,null,,,,,,,,,,,,1828814,,,,,,,33424,,,,,,,8583,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,COPY_OF_EDW_SEM.D_PMT_METH_TYPE,null,null,4,11ebabad-5212-43df-9a41-43c6a405c40f,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapComp,,,null,,,null,,,null,,,,null,null,,,,,,,,,,,,,744c06a7-5a31-491b-a570-31de406f7064,,,,,,,,,,,,,191370,1,,,,,,,,1828814,,,null,,,,33424,,,,,,,,,,,,,,,,,null,,,,,,0,1,0,,,,,,,,,,,,,,,,D_PMT_METH_TYPE,,,,,,,,,,,,,,null,,,,,,,,,,,,,,,,,2,,,,,,,,DATASTORE,,,,
+SnpMapCp,,,,,,null,M,null,,1,null,,null,null,O,,,,,,,,,,,,72968760-2cf5-4b7a-b905-1e843850cadb,,,,,,,,,,,,,,,,404959,2,,,,,null,,,191370,,,,,,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,OUTPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapAttr,,,null,null,P,null,,,,,,null,null,null,,,,,null,,,,,,null,null,d56af716-c985-435f-81fe-66d430572180,AUTO,,,1828819,,,,,,,,1403552,,,,,,,,,,1828820,,,,404959,,,,null,,,,,,,,,,,,,,,,,null,,null,null,,,1,,,0,,,,,,,null,null,100,,,,,Pmt_Meth_Type_Nm,,,,,,,,null,,,,,,null,,,,,,,,,,,,,,,null,,3,null,,,,,,,,,,,
+SnpMapCp,,,,,,null,M,null,,1,null,,null,null,I,,,,,,,,,,,,d30d3df7-3944-4c11-ba23-45b769676430,,,,,,,,,,,,,,,,404958,1,,,,,null,,,191370,,,,,,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,INPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapExpr,,,,,,,,,,,,,,,,,N,,,,,,,,null,null,0416c0ba-87ef-4085-845f-0d3d9c31a222,,null,,,,null,,null,,,,,,,,404958,,982208,,,,,,1403552,,,,null,,,,,,,,,,,,,,,,,,,null,,,null,null,,,,1,,,,,,,,null,null,,,,,,,,,,,null,@{R0},,,,,,,,null,,,,,,,,,,,,,,,,,,,,null,1383696546,0,PMT_METH_TYPE.Pmt_Meth_Type_Nm,,,,,null,
+SnpMapRef,IColumn,ODI,,,,null,,,,,,,,null,,,,,,,null,IDataStore,null,null,null,null,92abde7f-3866-40f8-907d-ef77a97c9e85,,,,,,,,,,9418,,,,,,,,,,,,1828818,,,,,,,33424,,,,,,,180829,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,Pmt_Meth_Type_Nm,null,null,1,0a9ebcc7-caf6-4aed-b78f-211c2b6903fe,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapRef,IDataStore,ODI,,,,null,,,,,,,,null,,,,,,,null,null,null,null,null,null,7b7ef6fd-b3a7-4134-b27c-01743f02039d,,,,,,,,,,null,,,,,,,,,,,,1828813,,,,,,,33424,,,,,,,9418,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,COPY_OF_EDW_VODACOM.PMT_METH_TYPE,null,null,5,8387f7b7-54ac-4c99-9a71-b53ace96e599,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapComp,,,null,,,null,,,null,,,,null,null,,,,,,,,,,,,,99bc84dc-169d-4554-9cf4-caf92c9330f6,,,,,,,,,,,,,191368,1,,,,,,,,1828813,,,null,,,,33424,,,,,,,,,,,,,,,,,null,,,,,,0,1,0,,,,,,,,,,,,,,,,PMT_METH_TYPE,,,,,,,,,,,,,,null,,,,,,,,,,,,,,,,,0,,,,,,,,DATASTORE,,,,
+SnpMapCp,,,,,,null,M,null,,1,null,,null,null,O,,,,,,,,,,,,da192690-bfc0-4931-ada0-344b7e2b083e,,,,,,,,,,,,,,,,404955,2,,,,,null,,,191368,,,,,,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,OUTPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapAttr,,,null,null,P,null,,,,,,null,null,null,,,,,null,,,,,,null,null,a4f55ba2-d632-4c87-9808-e9fabc3afc6c,AUTO,,,1828819,,,,,,,,1403548,,,,,,,,,,1828818,,,,404955,,,,null,,,,,,,,,,,,,,,,,null,,null,null,,,1,,,0,,,,,,,null,null,100,,,,,Pmt_Meth_Type_Nm,,,,,,,,null,,,,,,null,,,,,,,,,,,,,,,0,,2,null,,,,,,,,,,,
+SnpMapExprRef,,,,,,,,,,,,,,,,,,,,,,,,,,,fe0c5d45-c9c8-4619-849d-aaebd8fd5195,,,,,,,,,,,,,,,,,,,977490,,,,,,,,982208,,,,,,,,,,1403548,null,null,,,,,404958,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,R0,,,,,PMT_METH_TYPE.Pmt_Meth_Type_Nm,,,,,,,,,,,,,,,,,,
+SnpMapRef,IDataType,ODI,,,,null,,,,,,,,null,,,,,,,null,null,null,null,null,null,f59120ba-0d2f-4caf-8dfb-7e130f73661c,,,,,,,,,,null,,,,,,,,,,,,1828824,,,,,,,33424,,,,,,,301,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,TERADATA.TIMESTAMP,null,null,1,e14b0421-fe9a-3844-9b52-64d96a1ed0de,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapRef,IColumn,ODI,,,,null,,,,,,,,null,,,,,,,null,IDataStore,null,null,null,null,4e3fe6b8-8bc4-4e71-aac0-95302279b367,,,,,,,,,,9418,,,,,,,,,,,,1828823,,,,,,,33424,,,,,,,180832,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,Prcss_Clsd_Dttm,null,null,1,4fa524ef-3e35-4b39-bc55-fe288d0e1cf0,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapAttr,,,null,null,P,null,,,,,,null,null,null,,,,,null,,,,,,null,null,0e605c97-2de9-458d-91e7-712cdb62ab33,AUTO,,,1828824,,,,,,,,1403550,,,,,,,,,,1828823,,,,404955,,,,null,,,,,,,,,,,,,,,,,null,,null,null,,,1,,,0,,,,,,,null,null,26,,,,,Prcss_Clsd_Dttm,,,,,,,,null,,,,,,null,,,,,,,,,,,,,,,0,,5,null,,,,,,,,,,,
+SnpMapComp,,,null,,,null,,,null,,,,null,null,,,,,,,,,,,,,940cecf1-a48c-49eb-ac52-dbc0c38e6d7c,,,,,,,,,,,,,191369,2,,,,,,,,null,,,null,,,,33424,,,,,,,,,,,,,,,,,null,,,,,,0,0,0,,,,,,,,,,,,,,,,FILTER,,,,,,,,,,,,,,null,,,,,,,,,,,,,,,,,1,,,,,,,,FILTER,,,,
+SnpMapCp,,,,,,null,M,null,,1,null,,null,null,I,,,,,,,,,,,,169fedbb-4c60-4ff2-85c1-8e68de9cc989,,,,,,,,,,,,,,,,404956,3,,,,,null,,,191369,,,,,,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,INPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,54267f2e-e37d-4638-bea3-f7eb8870796c,,,,,null,,,,null,,,null,191369,,,null,,,,2375560,null,,null,,,,,,33424,,,null,,36,null,,,,,,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,FILTER_CONDITION,,,,,,,,,null,null,-1,E,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapExpr,,,,,,,,,,,,,,,,,N,,,,,,,,null,null,7fcc6ab3-cd9d-4fb6-8199-7cc872977300,,null,,,,null,,null,,,,,,,,null,,982212,,,,,,null,,,,2375560,,,,,,,,,,,,,,,,,,,null,,,null,null,,,,1,,,,,,,,null,null,,,,,,,,,,,null,"@{R0} = CAST('2050-12-31 23:59:59' AS TIMESTAMP(0) FORMAT 'YYYY-MM-DDbHH:MI:SS')
+AND @{R1} <> 'NA'",,,,,,,,null,,,,,,,,,,,,,,,,,,,,null,-1928667410,0,"PMT_METH_TYPE.Prcss_Clsd_Dttm = CAST('2050-12-31 23:59:59' AS TIMESTAMP(0) FORMAT 'YYYY-MM-DDbHH:MI:SS')
+AND PMT_METH_TYPE.Pmt_Meth_Type_Cd <> 'NA'",,,,,null,
+SnpMapExprRef,,,,,,,,,,,,,,,,,,,,,,,,,,,ec775421-4c24-4449-8b62-7a26b9390dd5,,,,,,,,,,,,,,,,,,,977492,,,,,,,,982212,,,,,,,,,,1403550,null,null,,,,,404956,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,R0,,,,,PMT_METH_TYPE.Prcss_Clsd_Dttm,,,,,,,,,,,,,,,,,,
+SnpMapRef,IColumn,ODI,,,,null,,,,,,,,null,,,,,,,null,IDataStore,null,null,null,null,59927b2e-23ee-42e3-a68b-947bac73df1d,,,,,,,,,,8583,,,,,,,,,,,,1828822,,,,,,,33424,,,,,,,169333,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,Pmt_Meth_Type_Desc,null,null,1,883984c7-e06a-4291-908e-f38d3e7f4151,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapAttr,,,null,null,P,null,,,,,,null,null,null,,,,,null,,,,,,null,null,c189c8b6-024d-46e8-b54f-325abf23206e,AUTO,,,1828819,,,,,,,,1403553,,,,,,,,,,1828822,,,,404959,,,,null,,,,,,,,,,,,,,,,,null,,null,null,,,1,,,0,,,,,,,null,null,250,,,,,Pmt_Meth_Type_Desc,,,,,,,,null,,,,,,null,,,,,,,,,,,,,,,null,,4,null,,,,,,,,,,,
+SnpMapExpr,,,,,,,,,,,,,,,,,N,,,,,,,,null,null,d64f10b7-f858-4259-b913-60883bc1ae66,,null,,,,null,,null,,,,,,,,404958,,982209,,,,,,1403553,,,,null,,,,,,,,,,,,,,,,,,,null,,,null,null,,,,1,,,,,,,,null,null,,,,,,,,,,,null,@{R0},,,,,,,,null,,,,,,,,,,,,,,,,,,,,null,-1707782988,0,PMT_METH_TYPE.Pmt_Meth_Type_Desc,,,,,null,
+SnpMapRef,IColumn,ODI,,,,null,,,,,,,,null,,,,,,,null,IDataStore,null,null,null,null,85ea0615-1c9a-47ed-b86b-71b48cfca05d,,,,,,,,,,9418,,,,,,,,,,,,1828821,,,,,,,33424,,,,,,,180830,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,Pmt_Meth_Type_Desc,null,null,1,c5f882e6-89c1-4da7-af41-396945c12cfc,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapAttr,,,null,null,P,null,,,,,,null,null,null,,,,,null,,,,,,null,null,3cc32c59-8124-4e4a-ae5f-b44af45ff3c1,AUTO,,,1828819,,,,,,,,1403549,,,,,,,,,,1828821,,,,404955,,,,null,,,,,,,,,,,,,,,,,null,,null,null,,,1,,,0,,,,,,,null,null,250,,,,,Pmt_Meth_Type_Desc,,,,,,,,null,,,,,,null,,,,,,,,,,,,,,,0,,3,null,,,,,,,,,,,
+SnpMapExprRef,,,,,,,,,,,,,,,,,,,,,,,,,,,9f901dfb-df5b-40c5-badb-5a581c9ac5f8,,,,,,,,,,,,,,,,,,,977491,,,,,,,,982209,,,,,,,,,,1403549,null,null,,,,,404958,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,R0,,,,,PMT_METH_TYPE.Pmt_Meth_Type_Desc,,,,,,,,,,,,,,,,,,
+SnpMapRef,IColumn,ODI,,,,null,,,,,,,,null,,,,,,,null,IDataStore,null,null,null,null,7c5d826e-44a7-4cfa-96a7-b48f1d699aa9,,,,,,,,,,8583,,,,,,,,,,,,1828817,,,,,,,33424,,,,,,,169331,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,Pmt_Meth_Type_Cd,null,null,1,a1c68c79-4004-4777-93a9-03a03693afb7,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapAttr,,,null,null,P,null,,,,,,null,null,null,,,,,null,,,,,,null,null,8af72fef-4994-4f75-a2ae-d96aca6ce673,AUTO,,,1828816,,,,,,,,1403551,,,,,,,,,,1828817,,,,404959,,,,null,,,,,,,,,,,,,,,,,null,,null,null,,,1,,,1,,,,,,,null,null,20,,,,,Pmt_Meth_Type_Cd,,,,,,,,null,,,,,,null,,,,,,,,,,,,,,,null,,2,null,,,,,,,,,,,
+SnpMapExpr,,,,,,,,,,,,,,,,,N,,,,,,,,null,null,8f6191de-f677-45ab-98b0-e1b8386b7bcb,,null,,,,null,,null,,,,,,,,404958,,982207,,,,,,1403551,,,,null,,,,,,,,,,,,,,,,,,,null,,,null,null,,,,1,,,,,,,,null,null,,,,,,,,,,,null,@{R0},,,,,,,,null,,,,,,,,,,,,,,,,,,,,null,1383696196,0,PMT_METH_TYPE.Pmt_Meth_Type_Cd,,,,,null,
+SnpMapRef,IColumn,ODI,,,,null,,,,,,,,null,,,,,,,null,IDataStore,null,null,null,null,e7b08aef-3146-4e46-b482-1abd14ff00ca,,,,,,,,,,9418,,,,,,,,,,,,1828815,,,,,,,33424,,,,,,,180828,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,Pmt_Meth_Type_Cd,null,null,1,76e332bd-0772-4007-b269-53e01d97f9c3,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapAttr,,,null,null,P,null,,,,,,null,null,null,,,,,null,,,,,,null,null,7984d970-dcd7-4bfb-8970-b5975dbd8b29,AUTO,,,1828816,,,,,,,,1403547,,,,,,,,,,1828815,,,,404955,,,,null,,,,,,,,,,,,,,,,,null,,null,null,,,1,,,1,,,,,,,null,null,20,,,,,Pmt_Meth_Type_Cd,,,,,,,,null,,,,,,null,,,,,,,,,,,,,,,0,,1,null,,,,,,,,,,,
+SnpMapExprRef,,,,,,,,,,,,,,,,,,,,,,,,,,,8b112c9f-061d-4ee8-8423-cea77b3209f2,,,,,,,,,,,,,,,,,,,977489,,,,,,,,982207,,,,,,,,,,1403547,null,null,,,,,404958,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,R0,,,,,PMT_METH_TYPE.Pmt_Meth_Type_Cd,,,,,,,,,,,,,,,,,,
+SnpMapRef,IDataType,ODI,,,,null,,,,,,,,null,,,,,,,null,null,null,null,null,null,2906a6b8-ff22-496d-b3f0-0efa303d0003,,,,,,,,,,null,,,,,,,,,,,,1828819,,,,,,,33424,,,,,,,678,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,TERADATA.VARCHAR,null,null,4,ce91f01b-1028-3055-a164-aebdcf008277,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapConn,,,,,,null,,,,,,,null,null,,,,,,,,,,,,,6e2ac5ff-c15e-43ee-8dda-61a1bad764e0,,,,,,,404956,,,,,,,,142060,,,,,,,,,,,,,,33424,,,,,,,,,,,,,,,,404955,,,,,,,,,0,,,,,,,,,,,,,,,,PMT_METH_TYPE.OUTPUT1_TO_FILTER.INPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapExprRef,,,,,,,,,,,,,,,,,,,,,,,,,,,c4b364fe-f922-432f-9cea-f020f55551d2,,,,,,,,,,,,,,,,,,,977493,,,,,,,,982212,,,,,,,,,,1403547,null,null,,,,,404956,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,R1,,,,,PMT_METH_TYPE.Pmt_Meth_Type_Cd,,,,,,,,,,,,,,,,,,
+SnpMapCp,,,,,,null,M,null,,1,null,,null,null,I,,,,,,,,,,,,1561c033-4e38-4735-8260-9e798925669d,,,,,,,,,,,,,,,,404954,1,,,,,null,,,191368,,,,,,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,INPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapRef,IDataType,ODI,,,,null,,,,,,,,null,,,,,,,null,null,null,null,null,null,5e33b58d-698f-47ab-afb3-a66428587329,,,,,,,,,,null,,,,,,,,,,,,1828816,,,,,,,33424,,,,,,,677,,,,,null,,,,,,null,,,null,,,,,,,,,,,,,null,null,,,,,,null,,,,,,,,,,,,,,,TERADATA.CHAR,null,null,2,b428d44f-8fd1-3aa9-93b4-686dd936032b,,,,,,,,null,,,,,,,,,,,,,,,,
+SnpMapCp,,,,,,null,M,null,,1,null,,null,null,O,,,,,,,,,,,,2728cbab-cdb7-447d-8bc5-475f38718292,,,,,,,,,,,,,,,,404957,4,,,,,null,,,191369,,,,,,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,OUTPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapConn,,,,,,null,,,,,,,null,null,,,,,,,,,,,,,f767b30a-68f1-4886-b079-b95c03200858,,,,,,,404958,,,,,,,,142061,,,,,,,,,,,,,,33424,,,,,,,,,,,,,,,,404957,,,,,,,,,0,,,,,,,,,,,,,,,,FILTER.OUTPUT1_TO_D_PMT_METH_TYPE.INPUT1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,5b0494f0-5e14-4777-beb2-7ac0005c8b8a,,,,,null,,,,null,,,1403553,null,,,null,,,,2375563,null,,null,,,,,,33424,,,null,,19,null,,,,,,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,CHECK_NOT_NULL_INDICATOR,,,,,,,,,null,null,-1,B,false,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,fc2be697-5d45-4819-9c8c-246764296f5f,,,,,null,,,,null,,,1403552,null,,,null,,,,2375562,null,,null,,,,,,33424,,,null,,19,null,,,,,,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,CHECK_NOT_NULL_INDICATOR,,,,,,,,,null,null,-1,B,false,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,49ac0e12-d43e-48e7-ad25-86288b395e1e,,,,,null,,,,null,,,1403551,null,,,null,,,,2375561,null,,null,,,,,,33424,,,null,,19,null,,,,,,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,CHECK_NOT_NULL_INDICATOR,,,,,,,,,null,null,-1,B,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,46d30efc-770a-4e07-bdac-f3b453e4beaa,,,,,null,,,,null,,,1403550,null,,,null,,,,2375559,null,,null,,,,,,33424,,,null,,19,null,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,CHECK_NOT_NULL_INDICATOR,,,,,,,,,null,null,-1,B,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,52e84a2d-cfde-4413-b9f7-1f6d950a9985,,,,,null,,,,null,,,1403549,null,,,null,,,,2375558,null,,null,,,,,,33424,,,null,,19,null,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,CHECK_NOT_NULL_INDICATOR,,,,,,,,,null,null,-1,B,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,eb486ba3-ddf0-4d62-9327-a9e8d08143a8,,,,,null,,,,null,,,1403548,null,,,null,,,,2375557,null,,null,,,,,,33424,,,null,,19,null,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,CHECK_NOT_NULL_INDICATOR,,,,,,,,,null,null,-1,B,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,7d17381e-4c12-4c3e-b5d4-fa7a1f4f8cc8,,,,,null,,,,null,,,1403547,null,,,null,,,,2375556,null,,null,,,,,,33424,,,null,,19,null,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,CHECK_NOT_NULL_INDICATOR,,,,,,,,,null,null,-1,B,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,429c74d6-6b8e-40c3-96df-0ec9c46488bd,,,,,null,,,,null,,,null,null,,,null,,,,2375555,null,,33424,,,,,,33424,,,null,,191,null,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,XMLDiagramSettings,,,,,,,,,null,null,-1,S,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapExpr,,,,,,,,,,,,,,,,,N,,,,,,,,null,null,3088f429-f37a-4c03-a4b9-62ae749418d9,,null,,,,null,,null,,,,,,,,null,,982211,,,,,,null,,,,2375555,,,,,,,,,,,,,,,,,,,null,,,null,null,,,,0,,,,,,,,null,null,,,,,,,,,,,null,null,,,,,,,,null,,,,,,,,,,,,,,,,,,,,null,0,1,"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<xmi:XMI xmlns:xmi='http://www.omg.org/spec/XMI/20131001' xmlns:DI='http://xmlns.omg.org/DI/2.0'>
+  <documentation exporter='Oracle IDE' exporterVersion='12.2.1'/>
+  <DI:Diagram xmi:type='DI:Diagram' xmi:id='id644e4c12-9fd0-4e71-8945-0e69afc3677a' zoom='0.0'>
+    <contained xmi:type='DI:GraphNode' xmi:id='idec7d3266-92fa-4cee-9948-f55849e6a8de'>
+      <contained xmi:type='DI:GraphNode' xmi:id='id2f328704-9ebd-4cbc-a429-b7319fd74408'>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='COMPACT'/>
+        <size xmi:type='DI:Dimension' height='100.0' width='100.0'/>
+      </contained>
+      <contained xmi:type='DI:GraphNode' xmi:id='id8ede017a-21bb-415f-b80d-d18991b2bf29'>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='SYMBOLIC'/>
+        <size xmi:type='DI:Dimension' height='119.47607421875' width='229.0'/>
+      </contained>
+      <contained xmi:type='DI:GraphNode' xmi:id='idb2c18d73-3907-4dae-a8cf-0de7ac25a538'>
+        <anchorage xmi:type='DI:GraphConnector' xmi:id='id99a92cc3-ec4d-443c-b61b-b968b3159f1b' graphEdge='idcec7dcbf-a733-4ffc-bd2e-43580158dbe2'/>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='Port-East'/>
+      </contained>
+      <position xmi:type='DI:Point' x='116.0' y='226.0'/>
+      <property xmi:type='DI:Property' key='lineColor' value='#a5a5a5'/>
+      <property xmi:type='DI:Property' key='font' value='SansSerif,plain,11'/>
+      <property xmi:type='DI:Property' key='showAttributeStatic' value='true'/>
+      <property xmi:type='DI:Property' key='fillColor' value='#c6d6ff'/>
+      <property xmi:type='DI:Property' key='showAttributes' value='true'/>
+      <property xmi:type='DI:Property' key='fontColor' value='#0'/>
+      <property xmi:type='DI:Property' key='showPackage' value='false'/>
+      <property xmi:type='DI:Property' key='showAttributeType' value='true'/>
+      <property xmi:type='DI:Property' key='showStereotype' value='false'/>
+      <property xmi:type='DI:Property' key='sortAttributesAlpha' value='true'/>
+      <property xmi:type='DI:Property' key='showAttributeVisibility' value='true'/>
+      <semanticModel xmi:type='DI:CoreSemanticModelBridge' element='LogicalInterfaceComponent:DATASTORE:LogicalAttributeDisplayerNode:99bc84dc-169d-4554-9cf4-caf92c9330f6' presentation='SYMBOLIC'/>
+      <size xmi:type='DI:Dimension' height='119.47607421875' width='229.0'/>
+    </contained>
+    <contained xmi:type='DI:GraphNode' xmi:id='id23be2a2e-ad77-44f5-829c-5ea5fb2ef626'>
+      <contained xmi:type='DI:GraphNode' xmi:id='id64b1736a-e645-4668-af3b-5af5911f6627'>
+        <anchorage xmi:type='DI:GraphConnector' xmi:id='id145bef7f-913a-4054-a0fa-ba05da12b236' graphEdge='idf9c85e34-8add-4171-ac29-09f46093fbad'/>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='Port-East'/>
+      </contained>
+      <contained xmi:type='DI:GraphNode' xmi:id='id2a6a5564-8b90-461a-ab52-464809ec2e7c'>
+        <anchorage xmi:type='DI:GraphConnector' xmi:id='id34bfa371-d8af-4993-89b3-56343e7bd711' graphEdge='idcec7dcbf-a733-4ffc-bd2e-43580158dbe2'/>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='Port-West'/>
+      </contained>
+      <position xmi:type='DI:Point' x='420.0' y='270.0'/>
+      <property xmi:type='DI:Property' key='showStereotype' value='false'/>
+      <property xmi:type='DI:Property' key='showPackage' value='false'/>
+      <property xmi:type='DI:Property' key='isStacked' value='false'/>
+      <property xmi:type='DI:Property' key='lineColor' value='#a5a5a5'/>
+      <semanticModel xmi:type='DI:CoreSemanticModelBridge' element='LogicalInterfaceComponent:FILTER:LogicalIconicNode:940cecf1-a48c-49eb-ac52-dbc0c38e6d7c'/>
+      <size xmi:type='DI:Dimension' height='50.0' width='50.0'/>
+    </contained>
+    <contained xmi:type='DI:GraphNode' xmi:id='idefc4c675-5244-401f-bf5f-4f0934aafc75'>
+      <contained xmi:type='DI:GraphNode' xmi:id='id53788bca-9b6a-42ce-95fa-9367afef187b'>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='COMPACT'/>
+        <size xmi:type='DI:Dimension' height='100.0' width='100.0'/>
+      </contained>
+      <contained xmi:type='DI:GraphNode' xmi:id='id0bb9dca1-95a4-4797-ad97-f459eaf04704'>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='SYMBOLIC'/>
+        <size xmi:type='DI:Dimension' height='119.47607421875' width='200.0'/>
+      </contained>
+      <contained xmi:type='DI:GraphNode' xmi:id='id19f69c0e-abc7-40ca-9688-cc500ec59ce1'>
+        <anchorage xmi:type='DI:GraphConnector' xmi:id='id7decc69b-f2e6-4a4a-8087-3234738a477a' graphEdge='idf9c85e34-8add-4171-ac29-09f46093fbad'/>
+        <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='Port-West'/>
+      </contained>
+      <position xmi:type='DI:Point' x='585.0' y='240.0'/>
+      <property xmi:type='DI:Property' key='lineColor' value='#a5a5a5'/>
+      <property xmi:type='DI:Property' key='font' value='SansSerif,plain,11'/>
+      <property xmi:type='DI:Property' key='showAttributeStatic' value='true'/>
+      <property xmi:type='DI:Property' key='fillColor' value='#c6d6ff'/>
+      <property xmi:type='DI:Property' key='showAttributes' value='true'/>
+      <property xmi:type='DI:Property' key='fontColor' value='#0'/>
+      <property xmi:type='DI:Property' key='showPackage' value='false'/>
+      <property xmi:type='DI:Property' key='showAttributeType' value='true'/>
+      <property xmi:type='DI:Property' key='showStereotype' value='false'/>
+      <property xmi:type='DI:Property' key='sortAttributesAlpha' value='true'/>
+      <property xmi:type='DI:Property' key='showAttributeVisibility' value='true'/>
+      <semanticModel xmi:type='DI:CoreSemanticModelBridge' element='LogicalInterfaceComponent:DATASTORE:LogicalAttributeDisplayerNode:744c06a7-5a31-491b-a570-31de406f7064' presentation='SYMBOLIC'/>
+      <size xmi:type='DI:Dimension' height='119.47607421875' width='200.0'/>
+    </contained>
+    <contained xmi:type='DI:GraphEdge' xmi:id='idcec7dcbf-a733-4ffc-bd2e-43580158dbe2' anchor='id99a92cc3-ec4d-443c-b61b-b968b3159f1b id34bfa371-d8af-4993-89b3-56343e7bd711'>
+      <semanticModel xmi:type='DI:CoreSemanticModelBridge' element='LogicalInterfaceComponent:EDGE:LogicalSimpleEdge:99bc84dc-169d-4554-9cf4-caf92c9330f6->940cecf1-a48c-49eb-ac52-dbc0c38e6d7c'/>
+      <waypoint xmi:type='DI:Point' x='344.0' y='285.738037109375'/>
+      <waypoint xmi:type='DI:Point' x='423.0' y='286.0'/>
+    </contained>
+    <contained xmi:type='DI:GraphEdge' xmi:id='idf9c85e34-8add-4171-ac29-09f46093fbad' anchor='id145bef7f-913a-4054-a0fa-ba05da12b236 id7decc69b-f2e6-4a4a-8087-3234738a477a'>
+      <semanticModel xmi:type='DI:CoreSemanticModelBridge' element='LogicalInterfaceComponent:EDGE:LogicalSimpleEdge:940cecf1-a48c-49eb-ac52-dbc0c38e6d7c->744c06a7-5a31-491b-a570-31de406f7064'/>
+      <waypoint xmi:type='DI:Point' x='467.0' y='286.0'/>
+      <waypoint xmi:type='DI:Point' x='586.0' y='299.738037109375'/>
+    </contained>
+    <property xmi:type='DI:Property' key='alignmentRulersColor' value='#99d9ea'/>
+    <property xmi:type='DI:Property' key='snapToGrid' value='true'/>
+    <property xmi:type='DI:Property' key='minLayoutDistance' value='40'/>
+    <property xmi:type='DI:Property' key='gridSize' value='15'/>
+    <property xmi:type='DI:Property' key='EdgeCrossingType' value='0'/>
+    <property xmi:type='DI:Property' key='PageOrientation' value='1'/>
+    <property xmi:type='DI:Property' key='showGrid' value='false'/>
+    <property xmi:type='DI:Property' key='showAlignmentRulers' value='false'/>
+    <property xmi:type='DI:Property' key='maxShapeWidth' value='200'/>
+    <property xmi:type='DI:Property' key='maxEntriesInShape' value='10'/>
+    <property xmi:type='DI:Property' key='ContainerLayoutStyle' value='2'/>
+    <property xmi:type='DI:Property' key='DiagramLayoutStyle' value='2'/>
+    <property xmi:type='DI:Property' key='PaperOrientation' value='Portrait'/>
+    <property xmi:type='DI:Property' key='PrintAreaX' value='0.0'/>
+    <property xmi:type='DI:Property' key='PrintAreaY' value='0.0'/>
+    <property xmi:type='DI:Property' key='PrintAreaWidth' value='0.0'/>
+    <property xmi:type='DI:Property' key='PrintAreaHeight' value='0.0'/>
+    <semanticModel xmi:type='DI:SimpleSemanticModelBridge' typeInfo='etl_xinterface_logical'/>
+  </DI:Diagram>
+</xmi:XMI>",,,,,null,
+SnpMapProp,,,,,,null,,,,,,,null,null,,null,,,,,,,,,,,1bef6e64-cbe8-40e5-bdcf-b4c85d77b7cb,,,,,null,,,,null,,,null,null,,,null,,,,2375554,null,,33424,,,,,,33424,,,null,,194,null,,,,,,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,TARGET_LOAD_ORDER,,,,,,,,,null,null,-1,E,null,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+SnpMapExpr,,,,,,,,,,,,,,,,,N,,,,,,,,null,null,8db1d4cb-fcd1-42eb-8152-5f2c25bf95df,,null,,,,null,,null,,,,,,,,null,,982210,,,,,,null,,,,2375554,,,,,,,,,,,,,,,,,,,null,,,null,null,,,,0,,,,,,,,null,null,,,,,,,,,,,null,null,,,,,,,,null,,,,,,,,,,,,,,,,,,,,null,0,0,null,,,,,null,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_FOLDER.4111,CW_PRJ_EDW_PILOT.Test,16.4,SNP_PROJECT.SNP_FOLDER,5bc84a14-db68-49ca-bb05-2209a4926d8d,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPING.33424,CW_PRJ_EDW_PILOT.Test.Test_3,16.4.6,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING,fa4adfd8-3d3b-402f-9728-c31209f76e0c,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_COL.169332,Copy of EDW_SEM.Global.D_PMT_METH_TYPE.Pmt_Meth_Type_Nm,15.6.15.16,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE.SNP_COL,8f0953e2-76cd-49d4-a611-72b0368ccd71,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_TABLE.8583,Copy of EDW_SEM.Global.D_PMT_METH_TYPE,15.6.15,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE,11ebabad-5212-43df-9a41-43c6a405c40f,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828814,null,null,null,e658b581-62c1-41b5-a73b-1615dd746cd2,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCOMPTYPE.1,DATASTORE,9,SNP_MAPCOMPTYPE,0d5a2da0-6631-4235-8da3-c3b153d2191f,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCOMP.191370,CW_PRJ_EDW_PILOT.Test.Test_3.D_PMT_METH_TYPE,16.4.6.15,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP,744c06a7-5a31-491b-a570-31de406f7064,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCPROLE.2,DATASTORE.OUTPUT,9.6,SNP_MAPCOMPTYPE.SNP_MAPCPROLE,ac3fd92c-54be-414b-98fb-6ccdf50b11b6,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCP.404959,CW_PRJ_EDW_PILOT.Test.Test_3.D_PMT_METH_TYPE.OUTPUT1,16.4.6.15.7,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP,72968760-2cf5-4b7a-b905-1e843850cadb,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828820,null,null,null,564063c3-7020-4b9b-be8e-0f9771e4881d,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828819,null,null,null,2906a6b8-ff22-496d-b3f0-0efa303d0003,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCPROLE.1,DATASTORE.INPUT,9.5,SNP_MAPCOMPTYPE.SNP_MAPCPROLE,afc08a78-e4fb-43bd-b602-ee46151b080e,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPATTR.1403552,CW_PRJ_EDW_PILOT.Test.Test_3.D_PMT_METH_TYPE.OUTPUT1.Pmt_Meth_Type_Nm,16.4.6.15.7.16,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP.SNP_MAPATTR,d56af716-c985-435f-81fe-66d430572180,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCP.404958,CW_PRJ_EDW_PILOT.Test.Test_3.D_PMT_METH_TYPE.INPUT1,16.4.6.15.6,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP,d30d3df7-3944-4c11-ba23-45b769676430,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_COL.180829,Copy of EDW_VODACOM.Global.PMT_METH_TYPE.Pmt_Meth_Type_Nm,19.6.13.16,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE.SNP_COL,0a9ebcc7-caf6-4aed-b78f-211c2b6903fe,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_TABLE.9418,Copy of EDW_VODACOM.Global.PMT_METH_TYPE,19.6.13,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE,8387f7b7-54ac-4c99-9a71-b53ace96e599,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCP.404955,CW_PRJ_EDW_PILOT.Test.Test_3.PMT_METH_TYPE.OUTPUT1,16.4.6.13.7,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP,da192690-bfc0-4931-ada0-344b7e2b083e,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828818,null,null,null,92abde7f-3866-40f8-907d-ef77a97c9e85,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828813,null,null,null,7b7ef6fd-b3a7-4134-b27c-01743f02039d,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCOMP.191368,CW_PRJ_EDW_PILOT.Test.Test_3.PMT_METH_TYPE,16.4.6.13,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP,99bc84dc-169d-4554-9cf4-caf92c9330f6,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPEXPR.982208,null,null,null,0416c0ba-87ef-4085-845f-0d3d9c31a222,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPATTR.1403548,CW_PRJ_EDW_PILOT.Test.Test_3.PMT_METH_TYPE.OUTPUT1.Pmt_Meth_Type_Nm,16.4.6.13.7.16,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP.SNP_MAPATTR,a4f55ba2-d632-4c87-9808-e9fabc3afc6c,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_DT.301,Teradata.TIMESTAMP,8.9,SNP_TECHNO.SNP_DT,e14b0421-fe9a-3844-9b52-64d96a1ed0de,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_COL.180832,Copy of EDW_VODACOM.Global.PMT_METH_TYPE.Prcss_Clsd_Dttm,19.6.13.15,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE.SNP_COL,4fa524ef-3e35-4b39-bc55-fe288d0e1cf0,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828823,null,null,null,4e3fe6b8-8bc4-4e71-aac0-95302279b367,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828824,null,null,null,f59120ba-0d2f-4caf-8dfb-7e130f73661c,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCOMPTYPE.2,FILTER,6,SNP_MAPCOMPTYPE,11f14cfc-70cd-486f-ad64-82882dba1d8f,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCOMP.191369,CW_PRJ_EDW_PILOT.Test.Test_3.FILTER,16.4.6.6,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP,940cecf1-a48c-49eb-ac52-dbc0c38e6d7c,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCPROLE.3,FILTER.INPUT,6.5,SNP_MAPCOMPTYPE.SNP_MAPCPROLE,96e773bf-b23c-4402-a34e-a0229a7e692a,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPEXPR.982212,null,null,null,7fcc6ab3-cd9d-4fb6-8199-7cc872977300,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPATTR.1403550,CW_PRJ_EDW_PILOT.Test.Test_3.PMT_METH_TYPE.OUTPUT1.Prcss_Clsd_Dttm,16.4.6.13.7.15,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP.SNP_MAPATTR,0e605c97-2de9-458d-91e7-712cdb62ab33,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCP.404956,CW_PRJ_EDW_PILOT.Test.Test_3.FILTER.INPUT1,16.4.6.6.6,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP,169fedbb-4c60-4ff2-85c1-8e68de9cc989,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPROPDEF.36,FILTER.FILTER_CONDITION,6.16,SNP_MAPCOMPTYPE.SNP_MAPPROPDEF,b0aee92f-3018-4de9-b2ed-82e9f2891a4f,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPROP.2375560,CW_PRJ_EDW_PILOT.Test.Test_3.FILTER_CONDITION,16.4.6.16,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPPROP,54267f2e-e37d-4638-bea3-f7eb8870796c,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_COL.169333,Copy of EDW_SEM.Global.D_PMT_METH_TYPE.Pmt_Meth_Type_Desc,15.6.15.18,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE.SNP_COL,883984c7-e06a-4291-908e-f38d3e7f4151,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828822,null,null,null,59927b2e-23ee-42e3-a68b-947bac73df1d,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPATTR.1403553,CW_PRJ_EDW_PILOT.Test.Test_3.D_PMT_METH_TYPE.OUTPUT1.Pmt_Meth_Type_Desc,16.4.6.15.7.18,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP.SNP_MAPATTR,c189c8b6-024d-46e8-b54f-325abf23206e,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_COL.180830,Copy of EDW_VODACOM.Global.PMT_METH_TYPE.Pmt_Meth_Type_Desc,19.6.13.18,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE.SNP_COL,c5f882e6-89c1-4da7-af41-396945c12cfc,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828821,null,null,null,85ea0615-1c9a-47ed-b86b-71b48cfca05d,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPEXPR.982209,null,null,null,d64f10b7-f858-4259-b913-60883bc1ae66,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPATTR.1403549,CW_PRJ_EDW_PILOT.Test.Test_3.PMT_METH_TYPE.OUTPUT1.Pmt_Meth_Type_Desc,16.4.6.13.7.18,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP.SNP_MAPATTR,3cc32c59-8124-4e4a-ae5f-b44af45ff3c1,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_COL.169331,Copy of EDW_SEM.Global.D_PMT_METH_TYPE.Pmt_Meth_Type_Cd,15.6.15.16,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE.SNP_COL,a1c68c79-4004-4777-93a9-03a03693afb7,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828817,null,null,null,7c5d826e-44a7-4cfa-96a7-b48f1d699aa9,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828816,null,null,null,5e33b58d-698f-47ab-afb3-a66428587329,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPATTR.1403551,CW_PRJ_EDW_PILOT.Test.Test_3.D_PMT_METH_TYPE.OUTPUT1.Pmt_Meth_Type_Cd,16.4.6.15.7.16,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP.SNP_MAPATTR,8af72fef-4994-4f75-a2ae-d96aca6ce673,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_COL.180828,Copy of EDW_VODACOM.Global.PMT_METH_TYPE.Pmt_Meth_Type_Cd,19.6.13.16,SNP_MODEL.SNP_SUBMODEL.SNP_TABLE.SNP_COL,76e332bd-0772-4007-b269-53e01d97f9c3,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPREF.1828815,null,null,null,e7b08aef-3146-4e46-b482-1abd14ff00ca,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPEXPR.982207,null,null,null,8f6191de-f677-45ab-98b0-e1b8386b7bcb,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPATTR.1403547,CW_PRJ_EDW_PILOT.Test.Test_3.PMT_METH_TYPE.OUTPUT1.Pmt_Meth_Type_Cd,16.4.6.13.7.16,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP.SNP_MAPATTR,7984d970-dcd7-4bfb-8970-b5975dbd8b29,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_DT.678,Teradata.VARCHAR,8.7,SNP_TECHNO.SNP_DT,ce91f01b-1028-3055-a164-aebdcf008277,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_DT.677,Teradata.CHAR,8.4,SNP_TECHNO.SNP_DT,b428d44f-8fd1-3aa9-93b4-686dd936032b,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCPROLE.4,FILTER.OUTPUT,6.6,SNP_MAPCOMPTYPE.SNP_MAPCPROLE,dfedb55a-d7d3-4b46-afdf-efa024d866cd,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPCP.404957,CW_PRJ_EDW_PILOT.Test.Test_3.FILTER.OUTPUT1,16.4.6.6.7,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPCOMP.SNP_MAPCP,2728cbab-cdb7-447d-8bc5-475f38718292,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPROPDEF.19,DATASTORE.CHECK_NOT_NULL_INDICATOR,9.24,SNP_MAPCOMPTYPE.SNP_MAPPROPDEF,98fa7545-cdff-44fd-99a7-b5ef26f70b58,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPROPDEF.191,XMLDiagramSettings,18,SNP_MAPPROPDEF,73fada02-4b4a-41b7-82a7-015a3bd763d9,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPROP.2375555,CW_PRJ_EDW_PILOT.Test.Test_3.XMLDiagramSettings,16.4.6.18,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPPROP,429c74d6-6b8e-40c3-96df-0ec9c46488bd,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPROPDEF.194,TARGET_LOAD_ORDER,17,SNP_MAPPROPDEF,9404d502-7340-4269-be5f-b175f57f0268,,,,,,,,,,,,,,,,,,,
+SnpFKXRef,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SNP_MAPPROP.2375554,CW_PRJ_EDW_PILOT.Test.Test_3.TARGET_LOAD_ORDER,16.4.6.17,SNP_PROJECT.SNP_FOLDER.SNP_MAPPING.SNP_MAPPROP,1bef6e64-cbe8-40e5-bdcf-b4c85d77b7cb,,,,,,,,,,,,,,,,,,,
+DwgExportSummary,,,,,,,,,,,,,,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0,,,,,,,,,,,0,0,0,0,,,,0,,0,0,,12.2.1,0,1,76,,,0,,,,,,,,,,,,,,,,,,,05.02.02.09,,,,0,,,0,,,,,0,,0,0,,0

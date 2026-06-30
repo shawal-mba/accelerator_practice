@@ -1,14 +1,11 @@
-from faker import Faker
+import os
 import factory
+
+from logging import Logger
 from sqlmodel import Field, SQLModel, create_engine, Session
 
 DB_URL = "sqlite:///database.sqlite"
-
-
-def create_faker() -> Faker:
-    Faker.seed(42)
-    fake = Faker(locale="zu_ZA")
-    return fake
+logger = Logger(name=__name__, level=1)
 
 
 class UserModel(SQLModel, table=True):
@@ -40,39 +37,44 @@ class UserModelFactory(factory.Factory):
     class Meta:
         model = UserModel
 
-    fake = create_faker()
-    name = fake.name()
-    prefix = fake.prefix()
-    firtname = fake.first_name()
-    lastname = fake.last_name()
-    address = fake.address()
-    addunit = fake.administrative_unit()
-    building = fake.building_number()
-    city = fake.city_name()
-    postcode = fake.postcode()
-    province = fake.province()
-    language = fake.language_name()
-    email = fake.email()
-    desc = fake.text(max_nb_chars=100)
-    country = fake.country()
-    latitude = fake.latitude()
-    longitude = fake.longitude()
-    url = fake.url()
-    quote = fake.sentence()
-    phone_number = fake.phone_number()
-    job = fake.job()
-    dob = fake.date_of_birth(minimum_age=16)
+    name = factory.Faker("name", locale="zu_ZA")
+    prefix = factory.Faker("prefix", locale="zu_ZA")
+    firtname = factory.Faker("first_name", locale="zu_ZA")
+    lastname = factory.Faker("last_name", locale="zu_ZA")
+    address = factory.Faker("address", locale="zu_ZA")
+    addunit = factory.Faker("administrative_unit", locale="zu_ZA")
+    building = factory.Faker("building_number", locale="zu_ZA")
+    city = factory.Faker("city_name", locale="zu_ZA")
+    postcode = factory.Faker("postcode", locale="zu_ZA")
+    province = factory.Faker("province", locale="zu_ZA")
+    language = factory.Faker("language_name", locale="zu_ZA")
+    email = factory.Faker("email", locale="zu_ZA")
+    desc = factory.Faker("text", max_nb_chars=100, locale="zu_ZA")
+    country = factory.Faker("country", locale="zu_ZA")
+    latitude = factory.Faker("latitude")
+    longitude = factory.Faker("longitude")
+    url = factory.Faker("url")
+    quote = factory.Faker("sentence")
+    phone_number = factory.Faker("phone_number", locale="zu_ZA")
+    job = factory.Faker("job", locale="zu_ZA")
+    dob = factory.Faker("date_of_birth", minimum_age=16)
 
 
 def main():
-    print("Hello from datafaker!")
+    logger.log(level=1, msg="Hello from datafaker!")
+    db_file = "database.sqlite"
+
+    if os.path.exists(db_file):
+        os.remove(db_file)
+        logger.log(level=1, msg="Deletes old db file")
 
     engine = create_engine(url=DB_URL)
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
-        user = UserModelFactory.create()
-        session.add(user)
-        session.commit()
+        for _ in range(500):
+            user = UserModelFactory.create()
+            session.add(user)
+            session.commit()
 
 
 if __name__ == "__main__":
