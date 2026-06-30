@@ -1,0 +1,13 @@
+[project]
+name = "datafaker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "factory-boy>=3.3.3",
+    "faker>=40.23.0",
+    "pydantic>=2.13.4",
+    "sqlalchemy>=2.0.51",
+    "sqlmodel>=0.0.39",
+]
