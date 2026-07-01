@@ -1,1 +1,4 @@
 teradata/metadata
+teradata/output
+teradata/.venv
+teradata/__pycache__
