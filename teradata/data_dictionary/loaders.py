@@ -41,7 +41,8 @@ def reconstruct_type_expr() -> pl.Expr:
     udt = pl.col("ColumnUDTName")
 
     return (
-        pl.when(ct == "CV").then(pl.format("VARCHAR({})", clen))
+        pl.when(ct.is_null() | (ct == "")).then(None)
+        .when(ct == "CV").then(pl.format("VARCHAR({})", clen))
         .when(ct == "CF").then(pl.format("CHAR({})", clen))
         .when(ct == "D").then(
             pl.when(dt.is_not_null() & (dt > 0))
@@ -79,6 +80,14 @@ def reconstruct_type_expr() -> pl.Expr:
         .when(ct == "UT").then(
             pl.when(udt.is_not_null() & (udt != "")).then(udt).otherwise(pl.lit("UDT"))
         )
+        .when(ct == "++").then(pl.lit("INTERVAL YEAR TO MONTH"))
+        .when(ct == "SZ").then(
+            pl.when(clen.is_not_null() & (clen > 0))
+            .then(pl.format("INTERVAL SECOND({})", df.fill_null(0)))
+            .otherwise(pl.lit("INTERVAL SECOND"))
+        )
+        .when(ct == "DT").then(pl.lit("DATASET"))
+        .when(ct == "VA").then(pl.format("VARCHAR({})", clen))
         .when(ct.is_in(INTERVAL_CODES + PERIOD_CODES))
         .then(ct.replace(COLUMN_TYPE_MAP))
         .otherwise(pl.format("{}({})", ct, clen))
