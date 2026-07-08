@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "teraremote"
+version = "0.1.0"
+description = "Connect to Teradata GCP, analyse DBs, and generate test data."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "faker>=40.28.1",
+    "teradatasql>=20.0.0.62",
+]
+
+[project.scripts]
+teraremote = "main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/teraremote"]
+
+[tool.ruff]
+line-length = 99
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.20",
+]

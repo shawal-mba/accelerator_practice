@@ -1,0 +1,59 @@
+# Bigquery — Justfile
+
+set dotenv-load
+
+export GOOGLE_CLOUD_PROJECT := "adg-internal-vodacom-tests"
+
+# List all datasets
+analyze:
+    uv run python main.py analyze
+
+# List tables in a dataset
+ds dataset:
+    uv run python main.py analyze --dataset {{dataset}}
+
+# Seed table(s) with fake data (table optional — seeds all if omitted)
+seed dataset table='' rows='100' output='':
+    #!/usr/bin/env bash
+    cmd="uv run python main.py seed {{dataset}}"
+    [ -n "{{table}}" ] && cmd="$cmd {{table}}"
+    cmd="$cmd --rows {{rows}}"
+    [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
+    $cmd
+
+# Read rows from a table
+read dataset table limit='20':
+    uv run python main.py read {{dataset}} {{table}} --limit {{limit}}
+
+# Create test tables with all column types
+create-schema dataset:
+    uv run python main.py create-schema {{dataset}}
+
+# Drop all test tables
+drop-schema dataset:
+    uv run python main.py drop-schema {{dataset}}
+
+# Seed test tables with referential integrity
+seed-test dataset output='':
+    #!/usr/bin/env bash
+    cmd="uv run python main.py seed-test {{dataset}}"
+    [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
+    $cmd
+
+# Run linter
+lint:
+    uv run ruff check .
+    uv run ruff format --check .
+
+# Auto-fix lint and fmt
+fmt:
+    uv run ruff check --fix .
+    uv run ruff format .
+
+# Authenticate via gcloud application-default login
+login:
+    gcloud auth application-default login
+
+# Show this help
+help:
+    @just --list

@@ -1,0 +1,129 @@
+=== DB_DEMO_FOR_SYNTHETIC.test_types_scalar ===
+Status: [Version 20.0.0.62] [Session 1090] [Teradata Database] [Error 6760] [SQLState HY000] Invalid timestamp.
+ at gosqldriver/teradatasql.formatError ErrorUtil.go:84
+ at gosqldriver/teradatasql.(*TeradataConnection).formatDatabaseError ErrorUtil.go:235
+ at gosqldriver/teradatasql.(*TeradataConnection).makeChainedDatabaseError ErrorUtil.go:252
+ at gosqldriver/teradatasql.(*TeradataConnection).processErrorParcel TeradataConnection.go:380
+ at gosqldriver/teradatasql.(*TeradataRows).processResponseBundle TeradataRows.go:2931
+ at gosqldriver/teradatasql.(*TeradataRows).executeSQLRequest TeradataRows.go:1247
+ at gosqldriver/teradatasql.newTeradataRows TeradataRows.go:846
+ at gosqldriver/teradatasql.(*teradataStatement).QueryContext TeradataStatement.go:122
+ at gosqldriver/teradatasql.(*TeradataConnection).QueryContext TeradataConnection.go:870
+ at database/sql.ctxDriverQuery ctxutil.go:48
+ at database/sql.(*DB).queryDC.func1 sql.go:1786
+ at database/sql.withLock sql.go:3572
+ at database/sql.(*DB).queryDC sql.go:1781
+ at database/sql.(*Conn).QueryContext sql.go:2037
+ at main.createRows goside.go:1394
+ at main.createRowsC goside.go:1342
+ at main.goCreateRows goside.go:1256
+ at _cgoexp_c273b9bb44e4_goCreateRows _cgo_gotypes.go:537
+ at runtime.cgocallbackg1 cgocall.go:466
+ at runtime.cgocallbackg cgocall.go:362
+ at runtime.cgocallback asm_arm64.s:1359
+ at runtime.goexit asm_arm64.s:1447
+
+=== DB_DEMO_FOR_SYNTHETIC.test_types_lob ===
+Columns: id (I), col_clob (CO), col_blob (BO)
+Inserted 10 rows
+
+=== DB_DEMO_FOR_SYNTHETIC.test_types_json ===
+Columns: id (I), col_json (JN)
+Inserted 10 rows
+
+=== DB_DEMO_FOR_SYNTHETIC.test_types_interval ===
+Status: [Version 20.0.0.62] [Session 1090] [Teradata SQL Driver] [Error 528] [SQLState HY000] A failure occurred while executing rows 1 through 10 of a batch request. Details of the failure can be found in the error string that is accessible using the escape functions {fn teradata_nativesql}{fn teradata_get_errors}.
+ at gosqldriver/teradatasql.formatError ErrorUtil.go:84
+ at gosqldriver/teradatasql.constructDriverError ErrorUtil.go:164
+ at gosqldriver/teradatasql.(*TeradataConnection).makeDriverError ErrorUtil.go:197
+ at gosqldriver/teradatasql.(*TeradataRows).generateBatchErrors TeradataRows.go:1302
+ at gosqldriver/teradatasql.newTeradataRows TeradataRows.go:798
+ at gosqldriver/teradatasql.(*teradataStatement).QueryContext TeradataStatement.go:122
+ at gosqldriver/teradatasql.(*TeradataConnection).QueryContext TeradataConnection.go:870
+ at database/sql.ctxDriverQuery ctxutil.go:48
+ at database/sql.(*DB).queryDC.func1 sql.go:1786
+ at database/sql.withLock sql.go:3572
+ at database/sql.(*DB).queryDC sql.go:1781
+ at database/sql.(*Conn).QueryContext sql.go:2037
+ at main.createRows goside.go:1395
+ at main.createRowsC goside.go:1342
+ at main.goCreateRows goside.go:1256
+ at _cgoexp_c273b9bb44e4_goCreateRows _cgo_gotypes.go:537
+ at runtime.cgocallbackg1 cgocall.go:466
+ at runtime.cgocallbackg cgocall.go:362
+ at runtime.cgocallback asm_arm64.s:1359
+ at runtime.goexit asm_arm64.s:1447
+Caused by [Version 20.0.0.62] [Session 1090] [Teradata Database] [Error 7452] [SQLState HY000] Invalid interval.
+ at gosqldriver/teradatasql.formatError ErrorUtil.go:84
+ at gosqldriver/teradatasql.(*TeradataConnection).formatDatabaseError ErrorUtil.go:235
+ at gosqldriver/teradatasql.(*TeradataConnection).makeChainedDatabaseError ErrorUtil.go:252
+ at gosqldriver/teradatasql.(*TeradataConnection).processErrorParcel TeradataConnection.go:380
+ at gosqldriver/teradatasql.(*TeradataRows).processResponseBundle TeradataRows.go:2931
+ at gosqldriver/teradatasql.(*TeradataRows).executeSQLRequest TeradataRows.go:1247
+ at gosqldriver/teradatasql.newTeradataRows TeradataRows.go:749
+ at gosqldriver/teradatasql.(*teradataStatement).QueryContext TeradataStatement.go:122
+ at gosqldriver/teradatasql.(*TeradataConnection).QueryContext TeradataConnection.go:870
+ at database/sql.ctxDriverQuery ctxutil.go:48
+ at database/sql.(*DB).queryDC.func1 sql.go:1786
+ at database/sql.withLock sql.go:3572
+ at database/sql.(*DB).queryDC sql.go:1781
+ at database/sql.(*Conn).QueryContext sql.go:2037
+ at main.createRows goside.go:1395
+ at main.createRowsC goside.go:1342
+ at main.goCreateRows goside.go:1256
+ at _cgoexp_c273b9bb44e4_goCreateRows _cgo_gotypes.go:537
+ at runtime.cgocallbackg1 cgocall.go:466
+ at runtime.cgocallbackg cgocall.go:362
+ at runtime.cgocallback asm_arm64.s:1359
+ at runtime.goexit asm_arm64.s:1447
+
+=== DB_DEMO_FOR_SYNTHETIC.test_types_period ===
+Status: [Version 20.0.0.62] [Session 1090] [Teradata Database] [Error 9102] [SQLState HY000] Invalid CAST. The source character value must be valid for casting as PERIOD.
+ at gosqldriver/teradatasql.formatError ErrorUtil.go:84
+ at gosqldriver/teradatasql.(*TeradataConnection).formatDatabaseError ErrorUtil.go:235
+ at gosqldriver/teradatasql.(*TeradataConnection).makeChainedDatabaseError ErrorUtil.go:252
+ at gosqldriver/teradatasql.(*TeradataConnection).processErrorParcel TeradataConnection.go:380
+ at gosqldriver/teradatasql.(*TeradataRows).processResponseBundle TeradataRows.go:2931
+ at gosqldriver/teradatasql.(*TeradataRows).executeSQLRequest TeradataRows.go:1247
+ at gosqldriver/teradatasql.newTeradataRows TeradataRows.go:846
+ at gosqldriver/teradatasql.(*teradataStatement).QueryContext TeradataStatement.go:122
+ at gosqldriver/teradatasql.(*TeradataConnection).QueryContext TeradataConnection.go:870
+ at database/sql.ctxDriverQuery ctxutil.go:48
+ at database/sql.(*DB).queryDC.func1 sql.go:1786
+ at database/sql.withLock sql.go:3572
+ at database/sql.(*DB).queryDC sql.go:1781
+ at database/sql.(*Conn).QueryContext sql.go:2037
+ at main.createRows goside.go:1394
+ at main.createRowsC goside.go:1342
+ at main.goCreateRows goside.go:1256
+ at _cgoexp_c273b9bb44e4_goCreateRows _cgo_gotypes.go:537
+ at runtime.cgocallbackg1 cgocall.go:466
+ at runtime.cgocallbackg cgocall.go:362
+ at runtime.cgocallback asm_arm64.s:1359
+ at runtime.goexit asm_arm64.s:1447
+
+=== DB_DEMO_FOR_SYNTHETIC.test_products ===
+Columns: product_id (I), product_name (CV), category (CV), price (D), in_stock (I1)
+Inserted 20 rows
+
+=== DB_DEMO_FOR_SYNTHETIC.test_customers ===
+Columns: customer_id (I), first_name (CV), last_name (CV), email (CV), phone (CV), signup_date (DA)
+Inserted 30 rows
+
+=== DB_DEMO_FOR_SYNTHETIC.test_orders ===
+Columns: order_id (I), customer_id (I), order_date (DA), total_amount (D), status (CV)
+Inserted 50 rows
+
+=== DB_DEMO_FOR_SYNTHETIC.test_order_items ===
+Columns: item_id (I), order_id (I), product_id (I), quantity (I), unit_price (D)
+Inserted 100 rows
+
+=== DB_DEMO_FOR_SYNTHETIC.test_nullable ===
+Columns: id (I), opt_string (CV), opt_integer (I), opt_decimal (D), opt_date (DA), opt_float (F)
+Inserted 20 rows
+
+=== DB_DEMO_FOR_SYNTHETIC.test_wide ===
+Columns: id (I), col_000 (CV), col_001 (CV), col_002 (CV), col_003 (CV), col_004 (CV), col_005 (CV), col_006 (CV), col_007 (CV), col_008 (CV), col_009 (CV), col_010 (CV), col_011 (CV), col_012 (CV), col_013 (CV), col_014 (CV), col_015 (CV), col_016 (CV), col_017 (CV), col_018 (CV), col_019 (CV), col_020 (CV), col_021 (CV), col_022 (CV), col_023 (CV), col_024 (CV), col_025 (CV), col_026 (CV), col_027 (CV), col_028 (CV), col_029 (CV), col_030 (CV), col_031 (CV), col_032 (CV), col_033 (CV), col_034 (CV), col_035 (CV), col_036 (CV), col_037 (CV), col_038 (CV), col_039 (CV), col_040 (CV), col_041 (CV), col_042 (CV), col_043 (CV), col_044 (CV), col_045 (CV), col_046 (CV), col_047 (CV), col_048 (CV), col_049 (CV)
+Inserted 10 rows
+
+Summary: 11 tables processed, 250 total rows

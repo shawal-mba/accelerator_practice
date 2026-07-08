@@ -1,0 +1,41 @@
+=== DS_DEMO_FOR_SYNTETIC.test_types_scalar ===
+Columns: id (INTEGER), col_string (STRING), col_bytes (BYTES), col_int (INTEGER), col_float (FLOAT), col_numeric (NUMERIC), col_bignumeric (BIGNUMERIC), col_bool (BOOLEAN), col_date (DATE), col_datetime (DATETIME), col_timestamp (TIMESTAMP), col_time (TIME), col_json (JSON)
+Inserted 10 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_types_repeated ===
+Columns: id (INTEGER), tags (STRING [REPEATED]), scores (FLOAT [REPEATED]), flags (BOOLEAN [REPEATED])
+Inserted 10 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_types_struct ===
+Columns: id (INTEGER), address (RECORD)
+Inserted 10 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_types_geography ===
+Columns: id (INTEGER), location (GEOGRAPHY)
+Inserted 10 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_products ===
+Columns: product_id (INTEGER), product_name (STRING), category (STRING), price (NUMERIC), in_stock (BOOLEAN)
+Inserted 20 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_customers ===
+Columns: customer_id (INTEGER), first_name (STRING), last_name (STRING), email (STRING), phone (STRING), signup_date (DATE)
+Inserted 30 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_orders ===
+Columns: order_id (INTEGER), customer_id (INTEGER), order_date (DATE), total_amount (NUMERIC), status (STRING)
+Inserted 50 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_order_items ===
+Columns: item_id (INTEGER), order_id (INTEGER), product_id (INTEGER), quantity (INTEGER), unit_price (NUMERIC)
+Inserted 100 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_nullable ===
+Columns: id (INTEGER), opt_string (STRING), opt_int (INTEGER), opt_float (FLOAT), opt_date (DATE), opt_bool (BOOLEAN)
+Inserted 20 rows
+
+=== DS_DEMO_FOR_SYNTETIC.test_wide ===
+Columns: col_000 (STRING), col_001 (STRING), col_002 (STRING), col_003 (STRING), col_004 (STRING), col_005 (STRING), col_006 (STRING), col_007 (STRING), col_008 (STRING), col_009 (STRING), col_010 (STRING), col_011 (STRING), col_012 (STRING), col_013 (STRING), col_014 (STRING), col_015 (STRING), col_016 (STRING), col_017 (STRING), col_018 (STRING), col_019 (STRING), col_020 (STRING), col_021 (STRING), col_022 (STRING), col_023 (STRING), col_024 (STRING), col_025 (STRING), col_026 (STRING), col_027 (STRING), col_028 (STRING), col_029 (STRING), col_030 (STRING), col_031 (STRING), col_032 (STRING), col_033 (STRING), col_034 (STRING), col_035 (STRING), col_036 (STRING), col_037 (STRING), col_038 (STRING), col_039 (STRING), col_040 (STRING), col_041 (STRING), col_042 (STRING), col_043 (STRING), col_044 (STRING), col_045 (STRING), col_046 (STRING), col_047 (STRING), col_048 (STRING), col_049 (STRING), id (INTEGER)
+Inserted 10 rows
+
+Summary: 10 tables processed, 270 total rows

@@ -1,0 +1,53 @@
+# Teraremote — Justfile
+
+set dotenv-load
+
+# List all databases
+analyze:
+    uv run python main.py analyze
+
+# List tables in a database
+db database:
+    uv run python main.py analyze --database {{database}}
+
+# Seed table(s) with fake data (table optional — seeds all if omitted)
+seed database table='' rows='100' output='':
+    #!/usr/bin/env bash
+    cmd="uv run python main.py seed {{database}}"
+    [ -n "{{table}}" ] && cmd="$cmd {{table}}"
+    cmd="$cmd --rows {{rows}}"
+    [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
+    $cmd
+
+# Read rows from a table
+read database table limit='20':
+    uv run python main.py read {{database}} {{table}} --limit {{limit}}
+
+# Create test tables with all column types
+create-schema database:
+    uv run python main.py create-schema {{database}}
+
+# Drop all test tables
+drop-schema database:
+    uv run python main.py drop-schema {{database}}
+
+# Seed test tables with referential integrity
+seed-test database output='':
+    #!/usr/bin/env bash
+    cmd="uv run python main.py seed-test {{database}}"
+    [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
+    $cmd
+
+# Run linter
+lint:
+    uv run ruff check .
+    uv run ruff format --check .
+
+# Auto-fix lint and format
+fmt:
+    uv run ruff check --fix .
+    uv run ruff format .
+
+# Show this help
+help:
+    @just --list
