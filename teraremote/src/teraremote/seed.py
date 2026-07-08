@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import random
 import re
 from typing import TYPE_CHECKING, Any, Callable
@@ -10,6 +11,8 @@ if TYPE_CHECKING:
     import teradatasql
 
 from teraremote.analyze import list_tables
+
+logger = logging.getLogger(__name__)
 
 fake = Faker("zu_ZA")
 
@@ -343,7 +346,8 @@ def seed_with_relations(
                 conn, database, table_id, columns, num_rows, fk_overrides=fk_overrides
             )
             results.append((table_id, inserted, "ok"))
-        except Exception as exc:
+        except (ValueError, RuntimeError) as exc:
+            logger.warning("Failed to seed %s: %s", table_id, exc)
             results.append((table_id, 0, str(exc)))
     return results
 
@@ -372,6 +376,7 @@ def seed_all(
                 continue
             inserted = insert_fake_rows(conn, database, name, columns, num_rows)
             results.append((name, inserted, "ok"))
-        except Exception as exc:
+        except (ValueError, RuntimeError) as exc:
+            logger.warning("Failed to seed %s: %s", name, exc)
             results.append((name, 0, str(exc)))
     return results

@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import logging
+
+from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import bigquery
+
+logger = logging.getLogger(__name__)
 
 # Schema definitions: list of (table_id, schema_fields, description)
 # Each schema_field is a dict with keys: name, type, mode, description
@@ -187,7 +192,7 @@ def create_tables(project: str, dataset: str) -> list[str]:
         table.description = description
         table = client.create_table(table, exists_ok=True)
         created.append(table_id)
-        print(f"  Created {table_id} ({len(schema)} columns)")
+        logger.info("Created %s (%d columns)", table_id, len(schema))
 
     client.close()
     return created
@@ -203,9 +208,11 @@ def drop_tables(project: str, dataset: str) -> list[str]:
         try:
             client.delete_table(full_id, not_found_ok=True)
             dropped.append(table_id)
-            print(f"  Dropped {table_id}")
-        except Exception as exc:
-            print(f"  Error dropping {table_id}: {exc}")
+            logger.info("Dropped %s", table_id)
+        except NotFound:
+            logger.debug("Table %s not found, skipping", table_id)
+        except GoogleAPIError as exc:
+            logger.error("Error dropping %s: %s", table_id, exc)
 
     client.close()
     return dropped

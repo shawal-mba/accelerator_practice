@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Lint bigquery
+        run: uv run ruff check . && uv run ruff format --check .
+        working-directory: bigquery
+      - name: Lint teraremote
+        run: uv run ruff check . && uv run ruff format --check .
+        working-directory: teraremote
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [bigquery, teraremote]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync
+        working-directory: ${{ matrix.project }}
+      - name: Run tests
+        run: uv run pytest
+        working-directory: ${{ matrix.project }}
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [bigquery, teraremote]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Build wheel
+        run: uv build
+        working-directory: ${{ matrix.project }}

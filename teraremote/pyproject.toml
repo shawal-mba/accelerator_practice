@@ -8,6 +8,14 @@ version = "0.1.0"
 description = "Connect to Teradata GCP, analyse DBs, and generate test data."
 readme = "README.md"
 requires-python = ">=3.12"
+authors = [{name = "ADG"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+keywords = ["teradata", "gcp", "synthetic-data", "testing"]
 dependencies = [
     "faker>=40.28.1",
     "rich>=13.0.0",
@@ -29,5 +37,12 @@ select = ["E", "F", "I"]
 
 [dependency-groups]
 dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "pytest-rich>=0.2.0",
     "ruff>=0.15.20",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short --rich"

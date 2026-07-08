@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import teradatasql
+
+logger = logging.getLogger(__name__)
+
 # Schema definitions: list of (table_name, DDL, description)
 TEST_TABLES: list[tuple[str, str, str]] = [
     # ── 1. All scalar types ──────────────────────────────────────────────
@@ -178,47 +186,44 @@ FK_MAP: dict[str, dict[str, tuple[str, str]]] = {
 }
 
 
-def create_tables(database: str, conn) -> list[str]:
+def create_tables(database: str, conn: teradatasql.TeradataConnection) -> list[str]:
     """Create all test tables. Returns list of table names created."""
     created: list[str] = []
     with conn.cursor() as cur:
-        # Create database if it doesn't exist
         try:
             cur.execute(f"CREATE DATABASE {database} AS PERMANENT = 1e8, SPOOL = 1e8")
-            print(f"  Created database {database}")
+            logger.info("Created database %s", database)
         except Exception as exc:
             if "already exists" in str(exc).lower():
-                print(f"  Database {database} (already exists)")
+                logger.info("Database %s already exists", database)
             else:
-                print(f"  Error creating database {database}: {exc}")
+                logger.error("Error creating database %s: %s", database, exc)
                 return created
 
         for table_name, ddl, _ in TEST_TABLES:
             try:
                 cur.execute(ddl.format(db=database))
                 created.append(table_name)
-                print(f"  Created {table_name}")
+                logger.info("Created %s", table_name)
             except Exception as exc:
-                # Table may already exist
                 if "already exists" in str(exc).lower():
                     created.append(table_name)
-                    print(f"  {table_name} (already exists)")
+                    logger.info("%s already exists", table_name)
                 else:
-                    print(f"  Error creating {table_name}: {exc}")
+                    logger.error("Error creating %s: %s", table_name, exc)
     return created
 
 
-def drop_tables(database: str, conn) -> list[str]:
+def drop_tables(database: str, conn: teradatasql.TeradataConnection) -> list[str]:
     """Drop all test tables. Returns list of table names dropped."""
     dropped: list[str] = []
     with conn.cursor() as cur:
-        # Drop children first to avoid FK violations
         for table_name, _, _ in reversed(TEST_TABLES):
             try:
                 cur.execute(f"DROP TABLE {database}.{table_name}")
                 dropped.append(table_name)
-                print(f"  Dropped {table_name}")
+                logger.info("Dropped %s", table_name)
             except Exception as exc:
                 if "does not exist" not in str(exc).lower():
-                    print(f"  Error dropping {table_name}: {exc}")
+                    logger.error("Error dropping %s: %s", table_name, exc)
     return dropped

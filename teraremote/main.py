@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import sys
 from io import StringIO
@@ -14,13 +15,37 @@ from teraremote.format import (
     database_list,
     dim,
     dropped,
+    error,
     heading,
-    seed_result,
+    seed_result_table,
     success,
     table_list,
 )
 from teraremote.seed import get_columns, insert_fake_rows, seed_all, seed_with_relations
 from teraremote.test_schema import FK_MAP, SEED_ORDER, create_tables, drop_tables
+
+logger = logging.getLogger(__name__)
+
+
+class TeraremoteError(Exception):
+    """Base exception for teraremote CLI."""
+
+
+class ConfigError(TeraremoteError):
+    """Configuration or credential errors."""
+
+
+class TableError(TeraremoteError):
+    """Table not found or inaccessible."""
+
+
+def _setup_logging(verbose: bool) -> None:
+    level = logging.DEBUG if verbose else logging.WARNING
+    logging.basicConfig(
+        level=level,
+        format="%(levelname)s %(name)s: %(message)s",
+        force=True,
+    )
 
 
 def _get_creds(args: argparse.Namespace) -> tuple[str, str, str]:
@@ -28,8 +53,8 @@ def _get_creds(args: argparse.Namespace) -> tuple[str, str, str]:
     user = args.user or os.environ.get("TERADATA_USER", "")
     password = args.password or os.environ.get("TERADATA_PASSWORD", "")
     if not all([host, user, password]):
-        sys.exit(
-            "Error: host, user, and password are required. "
+        raise ConfigError(
+            "host, user, and password are required. "
             "Pass as arguments or set TERADATA_HOST / TERADATA_USER / TERADATA_PASSWORD."
         )
     return host, user, password
@@ -73,7 +98,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
         if args.table:
             columns = get_columns(conn, args.database, args.table)
             if not columns:
-                sys.exit(f"Error: table {args.database}.{args.table} not found or has no columns.")
+                raise TableError(f"{args.database}.{args.table} not found or has no columns.")
 
             column_list(args.database, args.table, columns)
 
@@ -94,16 +119,13 @@ def cmd_seed(args: argparse.Namespace) -> None:
         else:
             heading(f"Seeding all tables in {args.database}...")
             results = seed_all(conn, args.database, num_rows=args.rows)
-            for name, inserted, status in results:
-                seed_result(name, inserted, status)
+            seed_result_table(results)
 
             report = _build_seed_report(conn, args.database, results)
             if args.output:
                 with open(args.output, "w") as f:
                     f.write(report)
                 dim(f"\nReport written to {args.output}")
-            else:
-                print(report)
     finally:
         conn.close()
 
@@ -148,16 +170,13 @@ def cmd_seed_test(args: argparse.Namespace) -> None:
     try:
         heading(f"Seeding test tables in {args.database} with referential integrity")
         results = seed_with_relations(conn, args.database, SEED_ORDER, FK_MAP)
-        for name, inserted, status in results:
-            seed_result(name, inserted, status)
+        seed_result_table(results)
 
         report = _build_seed_report(conn, args.database, results)
         if args.output:
             with open(args.output, "w") as f:
                 f.write(report)
             dim(f"\nReport written to {args.output}")
-        else:
-            print(report)
     finally:
         conn.close()
 
@@ -170,12 +189,14 @@ def main() -> None:
     parser.add_argument("--host", help="Teradata host (or env TERADATA_HOST)")
     parser.add_argument("--user", help="Teradata user (or env TERADATA_USER)")
     parser.add_argument("--password", help="Teradata password (or env TERADATA_PASSWORD)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
 
     sub = parser.add_subparsers(dest="command")
 
     # --- analyze ---
     p_analyze = sub.add_parser("analyze", help="List databases or tables")
     p_analyze.add_argument("--database", help="If provided, list tables in this database")
+    p_analyze.set_defaults(func=cmd_analyze)
 
     # --- seed ---
     p_seed = sub.add_parser("seed", help="Insert fake data into existing table(s)")
@@ -183,20 +204,24 @@ def main() -> None:
     p_seed.add_argument("table", nargs="?", default=None, help="Table to seed (all if omitted)")
     p_seed.add_argument("--rows", type=int, default=100, help="Number of rows (100)")
     p_seed.add_argument("--output", "-o", help="Write report to file")
+    p_seed.set_defaults(func=cmd_seed)
 
     # --- read ---
     p_read = sub.add_parser("read", help="Read rows from a table")
     p_read.add_argument("database", help="Target database")
     p_read.add_argument("table", help="Table to read")
     p_read.add_argument("--limit", type=int, default=20, help="Max rows (20)")
+    p_read.set_defaults(func=cmd_read)
 
     # --- create-schema ---
     p_create = sub.add_parser("create-schema", help="Create test tables with all column types")
     p_create.add_argument("database", help="Target database")
+    p_create.set_defaults(func=cmd_create_schema)
 
     # --- drop-schema ---
     p_drop = sub.add_parser("drop-schema", help="Drop all test tables")
     p_drop.add_argument("database", help="Target database")
+    p_drop.set_defaults(func=cmd_drop_schema)
 
     # --- seed-test ---
     p_seed_test = sub.add_parser(
@@ -205,20 +230,26 @@ def main() -> None:
     )
     p_seed_test.add_argument("database", help="Target database")
     p_seed_test.add_argument("--output", "-o", help="Write report to file")
+    p_seed_test.set_defaults(func=cmd_seed_test)
 
     args = parser.parse_args()
-    if args.command == "analyze":
-        cmd_analyze(args)
-    elif args.command == "seed":
-        cmd_seed(args)
-    elif args.command == "read":
-        cmd_read(args)
-    elif args.command == "create-schema":
-        cmd_create_schema(args)
-    elif args.command == "drop-schema":
-        cmd_drop_schema(args)
-    elif args.command == "seed-test":
-        cmd_seed_test(args)
+    _setup_logging(args.verbose)
+
+    if hasattr(args, "func"):
+        try:
+            args.func(args)
+        except ConfigError as exc:
+            error(f"Configuration error: {exc}")
+            sys.exit(1)
+        except TableError as exc:
+            error(f"Table error: {exc}")
+            sys.exit(1)
+        except TeraremoteError as exc:
+            error(f"Error: {exc}")
+            sys.exit(1)
+        except KeyboardInterrupt:
+            dim("\nInterrupted.")
+            sys.exit(130)
     else:
         parser.print_help()
 

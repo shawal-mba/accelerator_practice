@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import logging
+
 from rich.console import Console
 from rich.table import Table
+
+logger = logging.getLogger(__name__)
 
 console = Console()
 
@@ -35,27 +39,76 @@ def dim(text: str) -> None:
 
 
 def dataset_list(datasets: list[str]) -> None:
-    heading(f"Datasets ({len(datasets)})")
-    for ds in datasets:
-        console.print(f"  {ds}", style=STYLE_TABLE_NAME)
+    table = Table(
+        title=f"Datasets ({len(datasets)})",
+        title_style=STYLE_HEADING,
+        show_header=True,
+        header_style="bold cyan",
+        show_lines=False,
+        padding=(0, 2),
+    )
+    table.add_column("#", style=STYLE_DIM, width=4)
+    table.add_column("Dataset", style=STYLE_TABLE_NAME)
+    for i, ds in enumerate(datasets, 1):
+        table.add_row(str(i), ds)
+    console.print(table)
 
 
 def table_list(dataset: str, tables: list[dict[str, str]]) -> None:
-    heading(f"Tables in {dataset}")
-    for t in tables:
-        name = t["table_name"]
-        kind = t["table_type"]
-        console.print(f"  {name}", style=STYLE_TABLE_NAME, end="")
-        console.print(f"  ({kind})", style=STYLE_DIM)
-    dim(f"\nTotal: {len(tables)}")
+    table = Table(
+        title=f"Tables in {dataset}",
+        title_style=STYLE_HEADING,
+        show_header=True,
+        header_style="bold cyan",
+        show_lines=False,
+        padding=(0, 2),
+    )
+    table.add_column("#", style=STYLE_DIM, width=4)
+    table.add_column("Table", style=STYLE_TABLE_NAME)
+    table.add_column("Type", style=STYLE_DIM)
+    for i, t in enumerate(tables, 1):
+        table.add_row(str(i), t["table_name"], t["table_type"])
+    console.print(table)
+    dim(f"Total: {len(tables)}")
 
 
 def column_list(dataset: str, table: str, columns: list[tuple]) -> None:
-    heading(f"Columns in {dataset}.{table}")
-    for col_name, bq_type, is_repeated in columns:
-        rep = " [REPEATED]" if is_repeated else ""
-        console.print(f"  {col_name}", style=STYLE_TABLE_NAME, end="")
-        console.print(f" ({bq_type}{rep})", style=STYLE_DIM)
+    t = Table(
+        title=f"Columns in {dataset}.{table}",
+        title_style=STYLE_HEADING,
+        show_header=True,
+        header_style="bold cyan",
+        show_lines=False,
+        padding=(0, 2),
+    )
+    t.add_column("#", style=STYLE_DIM, width=4)
+    t.add_column("Column", style=STYLE_TABLE_NAME)
+    t.add_column("Type", style=STYLE_DIM)
+    t.add_column("Mode", style=STYLE_DIM)
+    for i, (col_name, bq_type, is_repeated) in enumerate(columns, 1):
+        mode = "REPEATED" if is_repeated else "NULLABLE"
+        t.add_row(str(i), col_name, bq_type, mode)
+    console.print(t)
+
+
+def seed_result_table(results: list[tuple[str, int, str]]) -> None:
+    table = Table(
+        title="Seed Results",
+        title_style=STYLE_HEADING,
+        show_header=True,
+        header_style="bold cyan",
+        show_lines=False,
+        padding=(0, 2),
+    )
+    table.add_column("Table", style=STYLE_TABLE_NAME)
+    table.add_column("Rows", justify="right")
+    table.add_column("Status")
+    for name, inserted, status in results:
+        if status == "ok":
+            table.add_row(name, str(inserted), f"[green]{status}[/green]")
+        else:
+            table.add_row(name, "-", f"[red]{status}[/red]")
+    console.print(table)
 
 
 def seed_result(name: str, inserted: int, status: str) -> None:
@@ -74,10 +127,6 @@ def data_table(col_names: list[str], rows: list[tuple], max_width: int = 40) -> 
     for row in rows:
         table.add_row(*(str(v) if v is not None else "[dim]NULL[/dim]" for v in row))
     console.print(table)
-
-
-def seed_report_header(database: str, name: str) -> None:
-    console.print(f"\n[bold]{database}.{name}[/bold]", style=STYLE_HEADING)
 
 
 def summary(total_tables: int, total_rows: int) -> None:
