@@ -7,6 +7,18 @@ from io import StringIO
 
 from bigquery.analyze import get_column_names, list_datasets, list_tables, read_table
 from bigquery.connection import get_client
+from bigquery.format import (
+    column_list,
+    created,
+    data_table,
+    dataset_list,
+    dim,
+    dropped,
+    heading,
+    seed_result,
+    success,
+    table_list,
+)
 from bigquery.seed import get_columns, insert_fake_rows, seed_all, seed_with_relations
 from bigquery.test_schema import FK_MAP, SEED_ORDER, create_tables, drop_tables
 
@@ -25,14 +37,9 @@ def cmd_analyze(args: argparse.Namespace) -> None:
         datasets = list_datasets(client)
         if args.dataset:
             tables = list_tables(client, args.dataset)
-            print(f"Tables in {args.dataset}:")
-            for t in tables:
-                print(f"  {t['table_name']}  ({t['table_type']})")
-            print(f"\nTotal: {len(tables)}")
+            table_list(args.dataset, tables)
         else:
-            print(f"Datasets ({len(datasets)}):")
-            for ds in datasets:
-                print(f"  {ds}")
+            dataset_list(datasets)
     finally:
         client.close()
 
@@ -63,15 +70,12 @@ def cmd_seed(args: argparse.Namespace) -> None:
             if not columns:
                 sys.exit(f"Error: table {args.dataset}.{args.table} not found or has no columns.")
 
-            print(f"Columns detected in {args.dataset}.{args.table}:")
-            for col_name, bq_type, is_repeated in columns:
-                rep = " [REPEATED]" if is_repeated else ""
-                print(f"  {col_name} ({bq_type}{rep})")
+            column_list(args.dataset, args.table, columns)
 
             inserted = insert_fake_rows(
                 client, args.dataset, args.table, columns, num_rows=args.rows
             )
-            print(f"\nInserted {inserted} rows into {args.dataset}.{args.table}")
+            success(f"\nInserted {inserted} rows into {args.dataset}.{args.table}")
 
             if args.output:
                 report = _build_seed_report(
@@ -81,23 +85,20 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 )
                 with open(args.output, "w") as f:
                     f.write(report)
-                print(f"Report written to {args.output}")
+                dim(f"Report written to {args.output}")
         else:
-            print(f"Seeding all tables in {args.dataset}...")
+            heading(f"Seeding all tables in {args.dataset}...")
             results = seed_all(client, args.dataset, num_rows=args.rows)
             for name, inserted, status in results:
-                if status == "ok":
-                    print(f"  {name}: {inserted} rows")
-                else:
-                    print(f"  {name}: {status}")
+                seed_result(name, inserted, status)
 
             report = _build_seed_report(client, args.dataset, results)
             if args.output:
                 with open(args.output, "w") as f:
                     f.write(report)
-                print(f"\nReport written to {args.output}")
+                dim(f"\nReport written to {args.output}")
             else:
-                print(f"\n{report}")
+                print(report)
     finally:
         client.close()
 
@@ -108,60 +109,42 @@ def cmd_read(args: argparse.Namespace) -> None:
     try:
         col_names = get_column_names(client, args.dataset, args.table)
         rows = read_table(client, args.dataset, args.table, limit=args.limit)
-
-        widths = [len(n) for n in col_names]
-        str_rows = []
-        for row in rows:
-            cells = [str(v) for v in row]
-            for i, cell in enumerate(cells):
-                widths[i] = max(widths[i], len(cell))
-            str_rows.append(cells)
-
-        header = "  ".join(n.ljust(widths[i]) for i, n in enumerate(col_names))
-        sep = "  ".join("-" * w for w in widths)
-
-        print(header)
-        print(sep)
-        for cells in str_rows:
-            print("  ".join(cells[i].ljust(widths[i]) for i in range(len(col_names))))
-        print(f"\n({len(rows)} rows)")
+        data_table(col_names, rows)
+        dim(f"({len(rows)} rows)")
     finally:
         client.close()
 
 
 def cmd_create_schema(args: argparse.Namespace) -> None:
     project = _get_project(args)
-    print(f"Creating test tables in {project}.{args.dataset}:")
-    created = create_tables(project, args.dataset)
-    print(f"\nCreated {len(created)} tables")
+    heading(f"Creating test tables in {project}.{args.dataset}")
+    created_tables = create_tables(project, args.dataset)
+    created(len(created_tables))
 
 
 def cmd_drop_schema(args: argparse.Namespace) -> None:
     project = _get_project(args)
-    print(f"Dropping test tables in {project}.{args.dataset}:")
-    dropped = drop_tables(project, args.dataset)
-    print(f"\nDropped {len(dropped)} tables")
+    heading(f"Dropping test tables in {project}.{args.dataset}")
+    dropped_tables = drop_tables(project, args.dataset)
+    dropped(len(dropped_tables))
 
 
 def cmd_seed_test(args: argparse.Namespace) -> None:
     project = _get_project(args)
     client = get_client(project)
     try:
-        print(f"Seeding test tables in {project}.{args.dataset} with referential integrity...")
+        heading(f"Seeding test tables in {project}.{args.dataset} with referential integrity")
         results = seed_with_relations(client, args.dataset, SEED_ORDER, FK_MAP)
         for name, inserted, status in results:
-            if status == "ok":
-                print(f"  {name}: {inserted} rows")
-            else:
-                print(f"  {name}: {status}")
+            seed_result(name, inserted, status)
 
         report = _build_seed_report(client, args.dataset, results)
         if args.output:
             with open(args.output, "w") as f:
                 f.write(report)
-            print(f"\nReport written to {args.output}")
+            dim(f"\nReport written to {args.output}")
         else:
-            print(f"\n{report}")
+            print(report)
     finally:
         client.close()
 

@@ -2,17 +2,19 @@
 
 set dotenv-load
 
-export GOOGLE_CLOUD_PROJECT := "adg-internal-vodacom-tests"
+project := "adg-internal-vodacom-tests"
+
+export GOOGLE_CLOUD_PROJECT := project
 
 # List all datasets
 analyze:
     uv run python main.py analyze
 
-# List tables in a dataset
-ds dataset:
+# List tables in a dataset (defaults to DS_DEMO_FOR_SYNTETIC)
+ds dataset='DS_DEMO_FOR_SYNTETIC':
     uv run python main.py analyze --dataset {{dataset}}
 
-# Seed table(s) with fake data (table optional — seeds all if omitted)
+# Seed table(s) with fake data and show results
 seed dataset table='' rows='100' output='':
     #!/usr/bin/env bash
     cmd="uv run python main.py seed {{dataset}}"
@@ -20,6 +22,16 @@ seed dataset table='' rows='100' output='':
     cmd="$cmd --rows {{rows}}"
     [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
     $cmd
+    echo ""
+    if [ -n "{{table}}" ]; then
+        uv run python main.py read {{dataset}} {{table}} --limit 20
+    else
+        tables=$(uv run python main.py analyze --dataset {{dataset}} 2>/dev/null | grep -oP '^\s+\K\S+' | grep test_)
+        for t in $tables; do
+            echo "--- $t ---"
+            uv run python main.py read {{dataset}} $t --limit 5
+        done
+    fi
 
 # Read rows from a table
 read dataset table limit='20':
@@ -53,6 +65,7 @@ fmt:
 # Authenticate via gcloud application-default login
 login:
     gcloud auth application-default login
+    gcloud auth application-default set-quota-project {{project}}
 
 # Show this help
 help:

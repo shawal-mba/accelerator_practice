@@ -7,6 +7,18 @@ from io import StringIO
 
 from teraremote.analyze import get_column_names, list_databases, list_tables, read_table
 from teraremote.connection import get_connection
+from teraremote.format import (
+    column_list,
+    created,
+    data_table,
+    database_list,
+    dim,
+    dropped,
+    heading,
+    seed_result,
+    success,
+    table_list,
+)
 from teraremote.seed import get_columns, insert_fake_rows, seed_all, seed_with_relations
 from teraremote.test_schema import FK_MAP, SEED_ORDER, create_tables, drop_tables
 
@@ -30,14 +42,9 @@ def cmd_analyze(args: argparse.Namespace) -> None:
         databases = list_databases(conn)
         if args.database:
             tables = list_tables(conn, args.database)
-            print(f"Tables in {args.database}:")
-            for t in tables:
-                print(f"  {t['table_name']}  ({t['table_kind']})")
-            print(f"\nTotal: {len(tables)}")
+            table_list(args.database, tables)
         else:
-            print(f"Databases ({len(databases)}):")
-            for db in databases:
-                print(f"  {db}")
+            database_list(databases)
     finally:
         conn.close()
 
@@ -68,14 +75,12 @@ def cmd_seed(args: argparse.Namespace) -> None:
             if not columns:
                 sys.exit(f"Error: table {args.database}.{args.table} not found or has no columns.")
 
-            print(f"Columns detected in {args.database}.{args.table}:")
-            for col_name, td_type in columns:
-                print(f"  {col_name} ({td_type})")
+            column_list(args.database, args.table, columns)
 
             inserted = insert_fake_rows(
                 conn, args.database, args.table, columns, num_rows=args.rows
             )
-            print(f"\nInserted {inserted} rows into {args.database}.{args.table}")
+            success(f"\nInserted {inserted} rows into {args.database}.{args.table}")
 
             if args.output:
                 report = _build_seed_report(
@@ -85,23 +90,20 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 )
                 with open(args.output, "w") as f:
                     f.write(report)
-                print(f"Report written to {args.output}")
+                dim(f"Report written to {args.output}")
         else:
-            print(f"Seeding all tables in {args.database}...")
+            heading(f"Seeding all tables in {args.database}...")
             results = seed_all(conn, args.database, num_rows=args.rows)
             for name, inserted, status in results:
-                if status == "ok":
-                    print(f"  {name}: {inserted} rows")
-                else:
-                    print(f"  {name}: {status}")
+                seed_result(name, inserted, status)
 
             report = _build_seed_report(conn, args.database, results)
             if args.output:
                 with open(args.output, "w") as f:
                     f.write(report)
-                print(f"\nReport written to {args.output}")
+                dim(f"\nReport written to {args.output}")
             else:
-                print(f"\n{report}")
+                print(report)
     finally:
         conn.close()
 
@@ -112,23 +114,8 @@ def cmd_read(args: argparse.Namespace) -> None:
     try:
         col_names = get_column_names(conn, args.database, args.table)
         rows = read_table(conn, args.database, args.table, limit=args.limit)
-
-        widths = [len(n) for n in col_names]
-        str_rows = []
-        for row in rows:
-            cells = [str(v) for v in row]
-            for i, cell in enumerate(cells):
-                widths[i] = max(widths[i], len(cell))
-            str_rows.append(cells)
-
-        header = "  ".join(n.ljust(widths[i]) for i, n in enumerate(col_names))
-        sep = "  ".join("-" * w for w in widths)
-
-        print(header)
-        print(sep)
-        for cells in str_rows:
-            print("  ".join(cells[i].ljust(widths[i]) for i in range(len(col_names))))
-        print(f"\n({len(rows)} rows)")
+        data_table(col_names, rows)
+        dim(f"({len(rows)} rows)")
     finally:
         conn.close()
 
@@ -137,9 +124,9 @@ def cmd_create_schema(args: argparse.Namespace) -> None:
     host, user, password = _get_creds(args)
     conn = get_connection(host, user, password)
     try:
-        print(f"Creating test tables in {args.database}:")
-        created = create_tables(args.database, conn)
-        print(f"\nCreated {len(created)} tables")
+        heading(f"Creating test tables in {args.database}")
+        created_tables = create_tables(args.database, conn)
+        created(len(created_tables))
     finally:
         conn.close()
 
@@ -148,9 +135,9 @@ def cmd_drop_schema(args: argparse.Namespace) -> None:
     host, user, password = _get_creds(args)
     conn = get_connection(host, user, password)
     try:
-        print(f"Dropping test tables in {args.database}:")
-        dropped = drop_tables(args.database, conn)
-        print(f"\nDropped {len(dropped)} tables")
+        heading(f"Dropping test tables in {args.database}")
+        dropped_tables = drop_tables(args.database, conn)
+        dropped(len(dropped_tables))
     finally:
         conn.close()
 
@@ -159,21 +146,18 @@ def cmd_seed_test(args: argparse.Namespace) -> None:
     host, user, password = _get_creds(args)
     conn = get_connection(host, user, password)
     try:
-        print(f"Seeding test tables in {args.database} with referential integrity...")
+        heading(f"Seeding test tables in {args.database} with referential integrity")
         results = seed_with_relations(conn, args.database, SEED_ORDER, FK_MAP)
         for name, inserted, status in results:
-            if status == "ok":
-                print(f"  {name}: {inserted} rows")
-            else:
-                print(f"  {name}: {status}")
+            seed_result(name, inserted, status)
 
         report = _build_seed_report(conn, args.database, results)
         if args.output:
             with open(args.output, "w") as f:
                 f.write(report)
-            print(f"\nReport written to {args.output}")
+            dim(f"\nReport written to {args.output}")
         else:
-            print(f"\n{report}")
+            print(report)
     finally:
         conn.close()
 

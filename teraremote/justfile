@@ -2,15 +2,19 @@
 
 set dotenv-load
 
+export TERADATA_HOST := "35.195.58.170"
+export TERADATA_USER := "dbc"
+export TERADATA_PASSWORD := "dbc"
+
 # List all databases
 analyze:
     uv run python main.py analyze
 
-# List tables in a database
-db database:
+# List tables in a database (defaults to DB_DEMO_FOR_SYNTHETIC)
+db database='DB_DEMO_FOR_SYNTHETIC':
     uv run python main.py analyze --database {{database}}
 
-# Seed table(s) with fake data (table optional — seeds all if omitted)
+# Seed table(s) with fake data and show results
 seed database table='' rows='100' output='':
     #!/usr/bin/env bash
     cmd="uv run python main.py seed {{database}}"
@@ -18,6 +22,16 @@ seed database table='' rows='100' output='':
     cmd="$cmd --rows {{rows}}"
     [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
     $cmd
+    echo ""
+    if [ -n "{{table}}" ]; then
+        uv run python main.py read {{database}} {{table}} --limit 20
+    else
+        tables=$(uv run python main.py analyze --database {{database}} 2>/dev/null | grep -oP '^\s+\K\S+' | grep test_)
+        for t in $tables; do
+            echo "--- $t ---"
+            uv run python main.py read {{database}} $t --limit 5
+        done
+    fi
 
 # Read rows from a table
 read database table limit='20':
