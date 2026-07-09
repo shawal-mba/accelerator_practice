@@ -162,8 +162,10 @@ def analyze(ctx: click.Context, database: str | None) -> None:
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
+        log = setup_file_log("analyze", engine, database or "all")
         if not database:
             databases = db.list_databases()
+            log.info("Listing databases: %d found", len(databases))
             if engine == "bigquery":
                 dataset_list(databases)
             else:
@@ -171,10 +173,12 @@ def analyze(ctx: click.Context, database: str | None) -> None:
         elif database == "all":
             for db_name in db.list_databases():
                 tables = db.list_tables(db_name)
+                log.info("%s: %d tables", db_name, len(tables))
                 kind_key = "table_type" if engine == "bigquery" else "table_kind"
                 table_list(db_name, tables, kind_key=kind_key)
         else:
             tables = db.list_tables(database)
+            log.info("%s: %d tables", database, len(tables))
             kind_key = "table_type" if engine == "bigquery" else "table_kind"
             table_list(database, tables, kind_key=kind_key)
 
@@ -268,9 +272,13 @@ def seed(
 def read(ctx: click.Context, database: str, table: str, limit: int) -> None:
     """Read rows from a table."""
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
     with db:
+        log = setup_file_log("read", engine, database)
+        log.info("Reading %s.%s (limit %d)", database, table, limit)
         col_names = db.get_column_names(database, table)
         rows = db.read_table(database, table, limit=limit)
+        log.info("Read %d rows from %s.%s", len(rows), database, table)
         data_table(col_names, rows)
         dim(f"({len(rows)} rows)")
 
@@ -281,10 +289,14 @@ def read(ctx: click.Context, database: str, table: str, limit: int) -> None:
 def create_schema(ctx: click.Context, database: str) -> None:
     """Create test tables with all column types. Pass 'all' for every database."""
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
     with db:
         for db_name in _resolve_databases(db, database):
+            log = setup_file_log("create-schema", engine, db_name)
+            log.info("Creating test tables in %s", db_name)
             heading(f"Creating test tables in {db_name}")
             created_tables = db.create_schema(db_name)
+            log.info("Created %d tables in %s", len(created_tables), db_name)
             created(len(created_tables))
 
 
@@ -294,10 +306,14 @@ def create_schema(ctx: click.Context, database: str) -> None:
 def drop_schema(ctx: click.Context, database: str) -> None:
     """Drop all test tables. Pass 'all' for every database."""
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
     with db:
         for db_name in _resolve_databases(db, database):
+            log = setup_file_log("drop-schema", engine, db_name)
+            log.info("Dropping test tables in %s", db_name)
             heading(f"Dropping test tables in {db_name}")
             dropped_tables = db.drop_schema(db_name)
+            log.info("Dropped %d tables in %s", len(dropped_tables), db_name)
             dropped(len(dropped_tables))
 
 
