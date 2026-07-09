@@ -158,18 +158,25 @@ def cli(
 @click.argument("database", required=False)
 @click.pass_context
 def analyze(ctx: click.Context, database: str | None) -> None:
-    """List databases/datasets or tables."""
+    """List databases/datasets or tables. Pass 'all' to list tables in every database."""
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
     with db:
-        databases = db.list_databases()
-        if database:
-            tables = db.list_tables(database)
-            kind_key = "table_type" if ctx.obj["engine"] == "bigquery" else "table_kind"
-            table_list(database, tables, kind_key=kind_key)
-        elif ctx.obj["engine"] == "bigquery":
-            dataset_list(databases)
+        if not database:
+            databases = db.list_databases()
+            if engine == "bigquery":
+                dataset_list(databases)
+            else:
+                database_list(databases)
+        elif database == "all":
+            for db_name in db.list_databases():
+                tables = db.list_tables(db_name)
+                kind_key = "table_type" if engine == "bigquery" else "table_kind"
+                table_list(db_name, tables, kind_key=kind_key)
         else:
-            database_list(databases)
+            tables = db.list_tables(database)
+            kind_key = "table_type" if engine == "bigquery" else "table_kind"
+            table_list(database, tables, kind_key=kind_key)
 
 
 @cli.command()
@@ -185,6 +192,7 @@ def seed(
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
+        all_results: list[tuple[str, int, str]] = []
         for db_name in _resolve_databases(db, database):
             if table:
                 log = setup_file_log("seed", engine, db_name)
@@ -192,7 +200,10 @@ def seed(
 
                 columns = db.get_columns(db_name, table)
                 if not columns:
-                    console.print(f"[yellow]Skipping {db_name}.{table}: no columns found[/yellow]")
+                    console.print(
+                        f"[yellow]Skipping {db_name}.{table}: no columns found[/yellow]"
+                    )
+                    all_results.append((f"{db_name}.{table}", 0, "no columns found"))
                     continue
 
                 # FK discovery: query the database metadata for foreign key
@@ -213,6 +224,7 @@ def seed(
                         f"[yellow]Skipping {db_name}.{table}: "
                         f"parent table has no rows.[/yellow]"
                     )
+                    all_results.append((f"{db_name}.{table}", 0, "skipped (parent empty)"))
                     continue
                 if fk_overrides:
                     for col, vals in fk_overrides.items():
@@ -225,6 +237,7 @@ def seed(
                 )
                 log.info("Inserted %d rows into %s.%s", inserted, db_name, table)
                 success(f"\nInserted {inserted} rows into {db_name}.{table}")
+                all_results.append((f"{db_name}.{table}", inserted, "ok"))
             else:
                 log = setup_file_log("seed-all", engine, db_name)
                 log.info("Seeding all tables in %s (%d rows each)", db_name, rows)
@@ -238,9 +251,10 @@ def seed(
 
                 for name, inserted, status in results:
                     log.info("%s: %s (%s)", name, inserted, status)
+                all_results.extend(results)
 
         if output:
-            report = _build_seed_report(db, database, [], engine)
+            report = _build_seed_report(db, database, all_results, engine)
             with open(output, "w") as f:
                 f.write(report)
             dim(f"\nReport written to {output}")

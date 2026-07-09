@@ -20,6 +20,9 @@ def setup_file_log(operation: str, engine: str, database: str) -> logging.Logger
     """Create a timestamped log file and return a logger that writes to it.
 
     The file is named ``logs/{operation}_{engine}_{database}_{timestamp}.log``.
+    Existing handlers on the logger are replaced so that repeated calls
+    (e.g. when iterating over multiple databases) don't produce duplicate
+    log entries.
     """
     LOG_DIR.mkdir(exist_ok=True)
 
@@ -30,6 +33,9 @@ def setup_file_log(operation: str, engine: str, database: str) -> logging.Logger
     logger = logging.getLogger(f"synth_data.{operation}")
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
+
+    # Replace existing handlers to avoid duplicates when called multiple times.
+    logger.handlers.clear()
 
     fh = logging.FileHandler(filepath)
     fh.setLevel(logging.DEBUG)
