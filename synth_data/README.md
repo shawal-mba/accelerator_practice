@@ -102,17 +102,18 @@ just all           # format + check
 ## Architecture
 
 ```
-main.py              CLI entry point (argparse)
-lib/
-  protocol.py        Database protocol (typing.Protocol)
-  bigquery.py        BigQuery backend
-  teradata.py        Teradata backend
-  matching.py        Column-to-faker mapping + SQL identifier validation
-  fk.py              Shared foreign-key resolution logic
-  format.py          Rich console output helpers
-  test_schema.py     Test table DDL definitions (BQ + TD)
+src/
+  main.py              CLI entry point (click)
+  protocol.py          Database protocol (typing.Protocol)
+  bigquery.py          BigQuery backend
+  teradata.py          Teradata backend
+  matching.py          Column-to-faker mapping + SQL identifier validation
+  fk.py                Shared foreign-key resolution logic
+  format.py            Rich console output helpers
+  log.py               Per-operation file logging
+  test_schema.py       Test table DDL definitions (BQ + TD)
 tests/
-  test_synth_data.py Unit tests for matching, casting, and schema logic
+  test_synth_data.py   Unit tests for matching, casting, and schema logic
 ```
 
 Both `BigQueryDB` and `TeradataDB` implement the `Database` protocol, making it straightforward to add new backends.

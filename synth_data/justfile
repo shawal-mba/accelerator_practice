@@ -1,14 +1,13 @@
 # synth-data justfile
-
-set dotenv-load
+# CLI usage: uv run synth --help
 
 default:
     @just --list
 
 words:
-    @wc -l *.py lib/*.py tests/*.py 2>/dev/null | grep -v total | sort -rn | awk '{printf "  %6d  %s\n", $1, $2}'
+    @wc -l *.py src/*.py tests/*.py 2>/dev/null | grep -v total | sort -rn | awk '{printf "  %6d  %s\n", $1, $2}'
     @echo ""
-    @wc -l *.py lib/*.py tests/*.py 2>/dev/null | tail -1 | awk '{printf "  %6d  %s\n", $1, $2}'
+    @wc -l *.py src/*.py tests/*.py 2>/dev/null | tail -1 | awk '{printf "  %6d  %s\n", $1, $2}'
 
 lint:
     uv run ruff check .
@@ -34,3 +33,10 @@ install:
 
 build:
     uv build
+
+auth:
+    gcloud auth application-default login
+
+set-project:
+    @echo "GOOGLE_CLOUD_PROJECT=adg-internal-tech-sandbox" >> .env
+    @echo "Project set to adg-internal-tech-sandbox in .env"

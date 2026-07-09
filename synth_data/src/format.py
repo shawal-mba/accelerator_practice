@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 
 console = Console()
@@ -13,11 +14,11 @@ _HEADING = "bold cyan"
 _SUCCESS = "bold green"
 _ERROR = "bold red"
 _WARN = "bold yellow"
-_TABLE_NAME = "bold"
 _DIM = "dim"
+_TABLE_NAME = "bold"
 
 
-# ── Simple messages ──────────────────────────────────────────────────────────
+# ── Messages ─────────────────────────────────────────────────────────────────
 
 
 def heading(text: str) -> None:
@@ -25,19 +26,19 @@ def heading(text: str) -> None:
 
 
 def success(text: str) -> None:
-    console.print(text, style=_SUCCESS)
+    console.print(Panel(text, style=_SUCCESS, border_style=_SUCCESS))
 
 
 def error(text: str) -> None:
-    console.print(text, style=_ERROR)
+    console.print(Panel(text, style=_ERROR, border_style=_ERROR, title="Error"))
+
+
+def warning(text: str) -> None:
+    console.print(Panel(text, style=_WARN, border_style=_WARN, title="Warning"))
 
 
 def dim(text: str) -> None:
     console.print(text, style=_DIM)
-
-
-def warning(text: str) -> None:
-    console.print(text, style=_WARN)
 
 
 def created(count: int) -> None:
@@ -64,7 +65,7 @@ def _entity_list(title: str, label: str, items: list[str]) -> None:
     table.add_column(label, style=_TABLE_NAME)
     for i, item in enumerate(items, 1):
         table.add_row(str(i), item)
-    console.print(table)
+    console.print(Panel(table, title=title, border_style=_HEADING))
 
 
 def database_list(databases: list[str]) -> None:
@@ -78,7 +79,7 @@ def dataset_list(datasets: list[str]) -> None:
 def table_list(database: str, tables: list[dict[str, str]], kind_key: str = "table_type") -> None:
     kind_label = "Type" if kind_key == "table_type" else "Kind"
     table = Table(
-        title=f"Tables in {database}",
+        title=f"Tables in {database} ({len(tables)})",
         title_style=_HEADING,
         show_header=True,
         header_style=_HEADING,
@@ -90,8 +91,7 @@ def table_list(database: str, tables: list[dict[str, str]], kind_key: str = "tab
     table.add_column(kind_label, style=_DIM)
     for i, t in enumerate(tables, 1):
         table.add_row(str(i), t["table_name"], t.get(kind_key, ""))
-    console.print(table)
-    dim(f"Total: {len(tables)}")
+    console.print(Panel(table, title=database, border_style=_HEADING))
 
 
 def column_list(
@@ -101,7 +101,7 @@ def column_list(
     engine: str = "bigquery",
 ) -> None:
     t = Table(
-        title=f"Columns in {database}.{table}",
+        title=f"{database}.{table} ({len(columns)} columns)",
         title_style=_HEADING,
         show_header=True,
         header_style=_HEADING,
@@ -119,12 +119,12 @@ def column_list(
     else:
         for i, (col_name, td_type) in enumerate(columns, 1):
             t.add_row(str(i), col_name, td_type)
-    console.print(t)
+    console.print(Panel(t, border_style=_HEADING))
 
 
 def seed_result_table(results: list[tuple[str, int, str]]) -> None:
     table = Table(
-        title="Seed Results",
+        title=f"Seed Results ({len(results)} tables)",
         title_style=_HEADING,
         show_header=True,
         header_style=_HEADING,
@@ -139,7 +139,7 @@ def seed_result_table(results: list[tuple[str, int, str]]) -> None:
             table.add_row(name, str(inserted), f"[green]{status}[/green]")
         else:
             table.add_row(name, "-", f"[red]{status}[/red]")
-    console.print(table)
+    console.print(Panel(table, title="Seed Results", border_style=_HEADING))
 
 
 def data_table(col_names: list[str], rows: list[tuple], max_width: int = 40) -> None:
@@ -148,4 +148,4 @@ def data_table(col_names: list[str], rows: list[tuple], max_width: int = 40) -> 
         table.add_column(name, overflow="fold", max_width=max_width)
     for row in rows:
         table.add_row(*(str(v) if v is not None else "[dim]NULL[/dim]" for v in row))
-    console.print(table)
+    console.print(Panel(table, title=f"{len(rows)} rows", border_style=_HEADING))

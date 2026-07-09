@@ -10,8 +10,8 @@ from typing import Any
 from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import bigquery
 
-from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
-from lib.matching import match_column_bq
+from src.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
+from src.matching import match_column_bq
 
 logger = logging.getLogger(__name__)
 
@@ -274,7 +274,7 @@ class BigQueryDB:
     # ── Schema management ────────────────────────────────────────────────────
 
     def create_schema(self, database: str) -> list[str]:
-        from lib.test_schema import BQ_TEST_TABLES, _make_schema_field
+        from src.test_schema import BQ_TEST_TABLES, _make_schema_field
 
         created: list[str] = []
         for t in BQ_TEST_TABLES:
@@ -289,7 +289,7 @@ class BigQueryDB:
         return created
 
     def drop_schema(self, database: str) -> list[str]:
-        from lib.test_schema import BQ_TEST_TABLES
+        from src.test_schema import BQ_TEST_TABLES
 
         dropped: list[str] = []
         for t in BQ_TEST_TABLES:
@@ -310,7 +310,7 @@ class BigQueryDB:
         Tables are purged in reverse FK order (children first) so that
         parent-table deletes are not blocked by existing child rows.
         """
-        from lib.fk import discover_fk_map, topo_sort, validate_fk_map
+        from src.fk import discover_fk_map, topo_sort, validate_fk_map
 
         tables = [
             t["table_name"]

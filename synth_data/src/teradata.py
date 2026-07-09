@@ -9,8 +9,8 @@ from typing import Any
 
 import teradatasql
 
-from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
-from lib.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
+from src.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
+from src.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
 
 logger = logging.getLogger(__name__)
 
@@ -326,7 +326,7 @@ class TeradataDB:
     # ── Schema management ────────────────────────────────────────────────────
 
     def create_schema(self, database: str) -> list[str]:
-        from lib.test_schema import TD_TEST_TABLES
+        from src.test_schema import TD_TEST_TABLES
 
         db = ident(database)
         created: list[str] = []
@@ -354,7 +354,7 @@ class TeradataDB:
         return created
 
     def drop_schema(self, database: str) -> list[str]:
-        from lib.test_schema import TD_TEST_TABLES
+        from src.test_schema import TD_TEST_TABLES
 
         db = ident(database)
         dropped: list[str] = []
@@ -376,7 +376,7 @@ class TeradataDB:
         Tables are purged in reverse FK order (children first) so that
         parent-table deletes are not blocked by existing child rows.
         """
-        from lib.fk import discover_fk_map, topo_sort, validate_fk_map
+        from src.fk import discover_fk_map, topo_sort, validate_fk_map
 
         tables = [
             t["table_name"]

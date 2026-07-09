@@ -25,10 +25,10 @@ dependencies = [
 ]
 
 [project.scripts]
-synth-data = "main:main"
+synth = "src.main:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["lib"]
+packages = ["src"]
 
 [tool.ruff]
 line-length = 99

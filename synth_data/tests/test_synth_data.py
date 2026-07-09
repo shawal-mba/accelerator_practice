@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from lib.fk import topo_sort
-from lib.matching import (
+from src.fk import topo_sort
+from src.matching import (
     cast_td_value,
     ident,
     match_column_bq,
 )
-from lib.test_schema import BQ_TEST_TABLES, FK_MAP, SEED_ORDER, TD_TEST_TABLES, _make_schema_field
+from src.test_schema import BQ_TEST_TABLES, FK_MAP, SEED_ORDER, TD_TEST_TABLES, _make_schema_field
 
 
 class TestIdent:

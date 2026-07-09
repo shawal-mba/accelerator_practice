@@ -13,9 +13,9 @@ from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
 
-from lib.bigquery import BigQueryDB
-from lib.fk import discover_fk_map, resolve_fk_overrides, validate_fk_map
-from lib.format import (
+from src.bigquery import BigQueryDB
+from src.fk import discover_fk_map, resolve_fk_overrides, validate_fk_map
+from src.format import (
     column_list,
     created,
     data_table,
@@ -23,15 +23,16 @@ from lib.format import (
     dataset_list,
     dim,
     dropped,
+    error,
     heading,
     seed_result_table,
     success,
     table_list,
 )
-from lib.log import setup_file_log
-from lib.protocol import Database
-from lib.teradata import TeradataDB
-from lib.test_schema import FK_MAP, SEED_ORDER
+from src.log import setup_file_log
+from src.protocol import Database
+from src.teradata import TeradataDB
+from src.test_schema import FK_MAP, SEED_ORDER
 
 load_dotenv()
 
@@ -157,12 +158,12 @@ def cli(
 @cli.command()
 @click.argument("database", required=False)
 @click.pass_context
-def analyze(ctx: click.Context, database: str | None) -> None:
+def analyse(ctx: click.Context, database: str | None) -> None:
     """List databases/datasets or tables. Pass 'all' to list tables in every database."""
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
-        log = setup_file_log("analyze", engine, database or "all")
+        log = setup_file_log("analyse", engine, database or "all")
         if not database:
             databases = db.list_databases()
             log.info("Listing databases: %d found", len(databases))
@@ -395,9 +396,23 @@ def verify(ctx: click.Context, database: str) -> None:
             fk_map = validate_fk_map(db, db_name, fk_map)
 
             if not fk_map:
-                console.print("[dim]No foreign key relationships found.[/dim]")
+                console.print(Panel("[dim]No foreign key relationships found.[/dim]"))
                 log.info("No FK relationships found")
                 continue
+
+            from rich.table import Table as RichTable
+
+            result_table = RichTable(
+                title=f"FK Integrity — {db_name}",
+                show_header=True,
+                header_style="bold",
+                show_lines=False,
+                padding=(0, 2),
+            )
+            result_table.add_column("Status", justify="center", width=6)
+            result_table.add_column("Child", style="bold")
+            result_table.add_column("Parent", style="dim")
+            result_table.add_column("Detail")
 
             violations = 0
             checked = 0
@@ -408,24 +423,28 @@ def verify(ctx: click.Context, database: str) -> None:
                     parent_vals = set(db.read_column_values(db_name, parent_table, parent_col))
 
                     orphans = child_vals - parent_vals
+                    fk_str = f"{child}.{child_col}"
+                    ref_str = f"{parent_table}.{parent_col}"
                     if orphans:
                         sample = list(orphans)[:5]
-                        console.print(
-                            f"[red]FAIL[/red] {db_name}.{child}.{child_col} -> "
-                            f"{parent_table}.{parent_col}: "
-                            f"{len(orphans)} orphaned value(s) (e.g. {sample})"
+                        result_table.add_row(
+                            "[red]FAIL[/red]",
+                            fk_str,
+                            ref_str,
+                            f"{len(orphans)} orphan(s) (e.g. {sample})",
                         )
                         log.warning(
-                            "FK violation: %s.%s -> %s.%s: %d orphans (e.g. %s)",
+                            "FK violation: %s.%s -> %s.%s: %d orphans",
                             child, child_col, parent_table, parent_col,
-                            len(orphans), sample,
+                            len(orphans),
                         )
                         violations += 1
                     else:
-                        console.print(
-                            f"[green]OK[/green]   {db_name}.{child}.{child_col} -> "
-                            f"{parent_table}.{parent_col}: "
-                            f"{len(child_vals)} values, all valid"
+                        result_table.add_row(
+                            "[green]OK[/green]",
+                            fk_str,
+                            ref_str,
+                            f"{len(child_vals)} values, all valid",
                         )
                         log.info(
                             "FK ok: %s.%s -> %s.%s: %d values",
@@ -433,17 +452,13 @@ def verify(ctx: click.Context, database: str) -> None:
                             len(child_vals),
                         )
 
+            console.print(Panel(result_table, border_style="green" if not violations else "red"))
+
             if violations:
-                console.print(
-                    f"\n[bold red]{violations}/{checked} FK constraint(s) "
-                    f"violated in {db_name}[/bold red]"
-                )
+                error(f"{violations}/{checked} FK constraint(s) violated in {db_name}")
                 log.error("%d/%d FK constraints violated", violations, checked)
             else:
-                console.print(
-                    f"\n[bold green]{checked}/{checked} FK constraints "
-                    f"valid in {db_name}[/bold green]"
-                )
+                success(f"{checked}/{checked} FK constraints valid in {db_name}")
                 log.info("All %d FK constraints valid", checked)
 
 
