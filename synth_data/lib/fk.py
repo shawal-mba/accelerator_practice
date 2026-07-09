@@ -1,4 +1,22 @@
-"""Shared foreign-key resolution logic for database backends."""
+"""Shared foreign-key resolution logic for database backends.
+
+Design choices
+--------------
+
+FK discovery is runtime-based rather than hardcoded because:
+- The tool must work with **any** database schema, not just the predefined
+  test tables.  Hardcoding FK maps in ``test_schema.py`` only covers the
+  test fixtures; real databases have their own constraints.
+- Database metadata (``INFORMATION_SCHEMA`` in BigQuery, ``DBC`` views in
+  Teradata) already stores FK relationships.  Querying it keeps the code
+  DRY and avoids schema drift between the tool and the actual database.
+
+Topological sort (Kahn's algorithm) is used to determine seed order so
+that parent rows always exist before child rows reference them.  If the
+FK graph contains a cycle (e.g. mutual references), the remaining tables
+are appended in their original order — this matches the "best effort"
+behaviour expected when seeding test data.
+"""
 
 from __future__ import annotations
 

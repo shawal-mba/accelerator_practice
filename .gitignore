@@ -18,6 +18,9 @@ build/
 .pytest_cache/
 .ruff_cache/
 
+# Logs (auto-created by seed operations)
+logs/
+
 # Teradata
 teradata/metadata
 teradata/output

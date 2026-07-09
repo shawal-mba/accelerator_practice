@@ -12,7 +12,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 from lib.bigquery import BigQueryDB
-from lib.fk import discover_fk_map, resolve_fk_overrides
+from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort
 from lib.format import (
     column_list,
     created,
@@ -27,6 +27,7 @@ from lib.format import (
     success,
     table_list,
 )
+from lib.log import setup_file_log
 from lib.protocol import Database
 from lib.teradata import TeradataDB
 from lib.test_schema import FK_MAP, SEED_ORDER
@@ -128,15 +129,27 @@ def cmd_seed(args: argparse.Namespace) -> None:
     with db:
         database = args.database
         if args.table:
+            log = setup_file_log("seed", args.engine, database)
+            log.info("Seeding %s.%s (%d rows)", database, args.table, args.rows)
+
             columns = db.get_columns(database, args.table)
             if not columns:
                 raise TableError(f"{database}.{args.table} not found or has no columns.")
 
+            # FK discovery: query the database metadata for foreign key constraints
+            # on this table so we can pull matching values from parent tables.
+            # Without this, seed would generate random FK values that violate
+            # referential integrity and cause constraint violations on insert.
             fk_map = discover_fk_map(db, database, [args.table])
+            log.info("FK map for %s: %s", args.table, fk_map)
+
             parent_cache: dict[tuple[str, str], list[Any]] = {}
             fk_overrides = resolve_fk_overrides(
                 db, database, args.table, fk_map, parent_cache
             )
+            if fk_overrides:
+                for col, vals in fk_overrides.items():
+                    log.info("Resolved FK %s: %d parent values", col, len(vals))
 
             column_list(database, args.table, columns, engine=args.engine)
 
@@ -144,6 +157,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 database, args.table, columns, num_rows=args.rows,
                 fk_overrides=fk_overrides,
             )
+            log.info("Inserted %d rows into %s.%s", inserted, database, args.table)
             success(f"\nInserted {inserted} rows into {database}.{args.table}")
 
             if args.output:
@@ -153,9 +167,30 @@ def cmd_seed(args: argparse.Namespace) -> None:
                     f.write(report)
                 dim(f"Report written to {args.output}")
         else:
+            log = setup_file_log("seed-all", args.engine, database)
+            log.info("Seeding all tables in %s (%d rows each)", database, args.rows)
+
             heading(f"Seeding all tables in {database}...")
+
+            # Discover FK relationships from database metadata and topo-sort
+            # so parents are always seeded before children.  This replaces
+            # the hardcoded SEED_ORDER / FK_MAP from test_schema with a
+            # generic approach that works for any schema.
+            seedable = [
+                t["table_name"]
+                for t in db.list_tables(database)
+            ]
+            fk_map = discover_fk_map(db, database, seedable)
+            ordered = topo_sort(seedable, fk_map)
+            log.info("Seed order: %s", ordered)
+            if fk_map:
+                log.info("FK map: %s", fk_map)
+
             results = db.seed_all(database, num_rows=args.rows)
             seed_result_table(results)
+
+            for name, inserted, status in results:
+                log.info("%s: %s (%s)", name, inserted, status)
 
             report = _build_seed_report(db, database, results, args.engine)
             if args.output:
@@ -192,15 +227,23 @@ def cmd_drop_schema(args: argparse.Namespace) -> None:
 def cmd_seed_test(args: argparse.Namespace) -> None:
     db = _get_db(args)
     with db:
+        log = setup_file_log("seed-test", args.engine, args.database)
+        log.info("Seeding test tables in %s with referential integrity", args.database)
+        log.info("Seed order: %s", [name for name, _ in SEED_ORDER])
+        log.info("FK map: %s", FK_MAP)
+
         heading(f"Seeding test tables in {args.database} with referential integrity")
         results = db.seed_with_relations(args.database, SEED_ORDER, FK_MAP)
         seed_result_table(results)
+
+        for name, inserted, status in results:
+            log.info("%s: %s (%s)", name, inserted, status)
 
         report = _build_seed_report(db, args.database, results, args.engine)
         if args.output:
             with open(args.output, "w") as f:
                 f.write(report)
-            dim(f"\nReport written to {args.output}")
+            dim(f"Report written to {args.output}")
 
 
 def main() -> None:

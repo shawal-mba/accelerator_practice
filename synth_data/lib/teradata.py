@@ -248,6 +248,12 @@ class TeradataDB:
         return (name, inserted, "ok")
 
     def seed_all(self, database: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
+        """Seed all seedable tables with automatic FK resolution.
+
+        Unlike the hardcoded ``SEED_ORDER`` / ``FK_MAP`` in ``test_schema``,
+        this method discovers FK relationships from Teradata metadata at
+        runtime and topologically sorts tables so parents are seeded first.
+        """
         results: list[tuple[str, int, str]] = []
         seedable = [
             t["table_name"]
