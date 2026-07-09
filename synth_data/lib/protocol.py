@@ -30,6 +30,16 @@ class Database(Protocol):
 
     def read_column_values(self, database: str, table: str, column: str) -> list[Any]: ...
 
+    def get_foreign_keys(
+        self, database: str, table: str
+    ) -> list[dict[str, str]]:
+        """Return FK relationships for *table*.
+
+        Each dict has keys ``column``, ``ref_table``, ``ref_column`` describing
+        one foreign key constraint (child column -> parent table.column).
+        """
+        ...
+
     def insert_fake_rows(
         self,
         database: str,

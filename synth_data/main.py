@@ -12,6 +12,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 from lib.bigquery import BigQueryDB
+from lib.fk import discover_fk_map, resolve_fk_overrides
 from lib.format import (
     column_list,
     created,
@@ -25,7 +26,6 @@ from lib.format import (
     seed_result_table,
     success,
     table_list,
-    warning,
 )
 from lib.protocol import Database
 from lib.teradata import TeradataDB
@@ -128,23 +128,22 @@ def cmd_seed(args: argparse.Namespace) -> None:
     with db:
         database = args.database
         if args.table:
-            if args.table in FK_MAP:
-                fk_cols = ", ".join(FK_MAP[args.table])
-                warning(
-                    f"Warning: {args.table} has FK columns ({fk_cols}) — "
-                    f"random values will NOT match parent tables."
-                )
-                warning(
-                    "  Use `seed-test` instead to maintain referential integrity.\n"
-                )
-
             columns = db.get_columns(database, args.table)
             if not columns:
                 raise TableError(f"{database}.{args.table} not found or has no columns.")
 
+            fk_map = discover_fk_map(db, database, [args.table])
+            parent_cache: dict[tuple[str, str], list[Any]] = {}
+            fk_overrides = resolve_fk_overrides(
+                db, database, args.table, fk_map, parent_cache
+            )
+
             column_list(database, args.table, columns, engine=args.engine)
 
-            inserted = db.insert_fake_rows(database, args.table, columns, num_rows=args.rows)
+            inserted = db.insert_fake_rows(
+                database, args.table, columns, num_rows=args.rows,
+                fk_overrides=fk_overrides,
+            )
             success(f"\nInserted {inserted} rows into {database}.{args.table}")
 
             if args.output:

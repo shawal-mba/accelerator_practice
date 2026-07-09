@@ -9,7 +9,7 @@ from typing import Any
 
 import teradatasql
 
-from lib.fk import resolve_fk_overrides
+from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort
 from lib.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
 
 logger = logging.getLogger(__name__)
@@ -95,6 +95,25 @@ class TeradataDB:
         with self.conn.cursor() as cur:
             cur.execute(f"SELECT DISTINCT {col} FROM {db}.{tbl} WHERE {col} IS NOT NULL")
             return [row[0] for row in cur.fetchall()]
+
+    def get_foreign_keys(self, database: str, table: str) -> list[dict[str, str]]:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT c.ColumnName, p.DatabaseName, p.TableName, c.ParentKeyColumn "
+                "FROM DBC.ChildrenV c "
+                "JOIN DBC.ParentsV p "
+                "  ON c.ChildDB = p.ParentDB AND c.ChildTable = p.ParentTable "
+                "WHERE c.DatabaseName = ? AND c.TableName = ?",
+                [database, table],
+            )
+            return [
+                {
+                    "column": row[0],
+                    "ref_table": row[2],
+                    "ref_column": row[3],
+                }
+                for row in cur.fetchall()
+            ]
 
     # ── Write operations ─────────────────────────────────────────────────────
 
@@ -230,13 +249,23 @@ class TeradataDB:
 
     def seed_all(self, database: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
         results: list[tuple[str, int, str]] = []
-        for t in self.list_tables(database):
-            name = t["table_name"]
-            if not self._is_seedable(t):
-                results.append((name, 0, f"skipped ({t['table_kind']})"))
-                continue
+        seedable = [
+            t["table_name"]
+            for t in self.list_tables(database)
+            if self._is_seedable(t)
+        ]
+        fk_map = discover_fk_map(self, database, seedable)
+        ordered = topo_sort(seedable, fk_map)
+        parent_cache: dict[tuple[str, str], list[Any]] = {}
+
+        for name in ordered:
             try:
-                results.append(self._seed_table(database, name, num_rows))
+                fk_overrides = resolve_fk_overrides(
+                    self, database, name, fk_map, parent_cache
+                )
+                results.append(
+                    self._seed_table(database, name, num_rows, fk_overrides)
+                )
             except (ValueError, RuntimeError, teradatasql.DatabaseError) as exc:
                 logger.warning("Failed to seed %s: %s", name, exc)
                 results.append((name, 0, str(exc)))
