@@ -196,12 +196,20 @@ INLINE_TYPES = frozenset({
 
 def _format_ts(value: Any) -> str:
     """Extract a TIMESTAMP string from a datetime or ISO string."""
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     if isinstance(value, datetime):
+        if value.tzinfo is not None:
+            value = value.astimezone(timezone.utc).replace(tzinfo=None)
         return value.strftime("%Y-%m-%d %H:%M:%S")
     if isinstance(value, str):
-        return value.replace("T", " ").split(".")[0].split("+")[0].split("Z")[0]
+        try:
+            dt = datetime.fromisoformat(value)
+        except ValueError:
+            return value.replace("T", " ").split(".")[0].split("+")[0].split("Z")[0]
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
     return str(value)
 
 

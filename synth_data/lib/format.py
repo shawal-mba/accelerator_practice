@@ -12,6 +12,7 @@ console = Console()
 _HEADING = "bold cyan"
 _SUCCESS = "bold green"
 _ERROR = "bold red"
+_WARN = "bold yellow"
 _TABLE_NAME = "bold"
 _DIM = "dim"
 
@@ -33,6 +34,10 @@ def error(text: str) -> None:
 
 def dim(text: str) -> None:
     console.print(text, style=_DIM)
+
+
+def warning(text: str) -> None:
+    console.print(text, style=_WARN)
 
 
 def created(count: int) -> None:

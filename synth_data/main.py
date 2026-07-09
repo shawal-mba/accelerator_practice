@@ -25,6 +25,7 @@ from lib.format import (
     seed_result_table,
     success,
     table_list,
+    warning,
 )
 from lib.protocol import Database
 from lib.teradata import TeradataDB
@@ -127,6 +128,16 @@ def cmd_seed(args: argparse.Namespace) -> None:
     with db:
         database = args.database
         if args.table:
+            if args.table in FK_MAP:
+                fk_cols = ", ".join(FK_MAP[args.table])
+                warning(
+                    f"Warning: {args.table} has FK columns ({fk_cols}) — "
+                    f"random values will NOT match parent tables."
+                )
+                warning(
+                    "  Use `seed-test` instead to maintain referential integrity.\n"
+                )
+
             columns = db.get_columns(database, args.table)
             if not columns:
                 raise TableError(f"{database}.{args.table} not found or has no columns.")
