@@ -215,10 +215,14 @@ class BigQueryDB:
     def seed_all(self, database: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
         """Seed all seedable tables with automatic FK resolution.
 
-        Unlike the hardcoded ``SEED_ORDER`` / ``FK_MAP`` in ``test_schema``,
-        this method discovers FK relationships from BigQuery metadata at
-        runtime and topologically sorts tables so parents are seeded first.
+        Discovers FK relationships from BigQuery metadata and topologically
+        sorts tables so parents are seeded first.  Falls back to the
+        hardcoded ``FK_MAP`` / ``SEED_ORDER`` when metadata discovery
+        returns nothing.
         """
+        from src.test_schema import FK_MAP as _FK_MAP
+        from src.test_schema import SEED_ORDER as _SEED_ORDER
+
         results: list[tuple[str, int, str]] = []
         seedable = [
             t["table_name"]
@@ -227,7 +231,15 @@ class BigQueryDB:
         ]
         fk_map = discover_fk_map(self, database, seedable)
         fk_map = validate_fk_map(self, database, fk_map)
-        ordered = topo_sort(seedable, fk_map)
+
+        if fk_map:
+            ordered = topo_sort(seedable, fk_map)
+        else:
+            known = {name for name, _ in _SEED_ORDER}
+            ordered = [name for name, _ in _SEED_ORDER if name in set(seedable)]
+            ordered += [t for t in seedable if t not in known]
+            fk_map = {k: v for k, v in _FK_MAP.items() if k in set(seedable)}
+
         parent_cache: dict[tuple[str, str], list[Any]] = {}
 
         for name in ordered:

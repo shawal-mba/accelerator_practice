@@ -114,23 +114,28 @@ class TeradataDB:
             return [row[0] for row in cur.fetchall()]
 
     def get_foreign_keys(self, database: str, table: str) -> list[dict[str, str]]:
-        with self.conn.cursor() as cur:
-            cur.execute(
-                "SELECT c.ColumnName, p.DatabaseName, p.TableName, c.ParentKeyColumn "
-                "FROM DBC.ChildrenV c "
-                "JOIN DBC.ParentsV p "
-                "  ON c.ChildDB = p.ParentDB AND c.ChildTable = p.ParentTable "
-                "WHERE c.DatabaseName = ? AND c.TableName = ?",
-                [database, table],
-            )
-            return [
-                {
-                    "column": row[0],
-                    "ref_table": row[2],
-                    "ref_column": row[3],
-                }
-                for row in cur.fetchall()
-            ]
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    "SELECT c.ColumnName, p.DatabaseName, p.TableName, "
+                    "c.ParentKeyColumn "
+                    "FROM DBC.ChildrenV c "
+                    "JOIN DBC.ParentsV p "
+                    "  ON c.ChildDB = p.ParentDB AND c.ChildTable = p.ParentTable "
+                    "WHERE c.DatabaseName = ? AND c.TableName = ?",
+                    [database, table],
+                )
+                return [
+                    {
+                        "column": row[0],
+                        "ref_table": row[2],
+                        "ref_column": row[3],
+                    }
+                    for row in cur.fetchall()
+                ]
+        except teradatasql.DatabaseError:
+            # DBC.ChildrenV / DBC.ParentsV may not exist on all Teradata versions
+            return []
 
     # ── Write operations ─────────────────────────────────────────────────────
 
@@ -267,10 +272,15 @@ class TeradataDB:
     def seed_all(self, database: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
         """Seed all seedable tables with automatic FK resolution.
 
-        Unlike the hardcoded ``SEED_ORDER`` / ``FK_MAP`` in ``test_schema``,
-        this method discovers FK relationships from Teradata metadata at
-        runtime and topologically sorts tables so parents are seeded first.
+        Discovers FK relationships from Teradata metadata and topologically
+        sorts tables so parents are seeded first.  Falls back to the
+        hardcoded ``FK_MAP`` / ``SEED_ORDER`` from ``test_schema`` when
+        metadata discovery returns nothing (e.g. on Teradata Vantage Express
+        where ``DBC.ParentsV`` may not exist).
         """
+        from src.test_schema import FK_MAP as _FK_MAP
+        from src.test_schema import SEED_ORDER as _SEED_ORDER
+
         results: list[tuple[str, int, str]] = []
         seedable = [
             t["table_name"]
@@ -279,7 +289,16 @@ class TeradataDB:
         ]
         fk_map = discover_fk_map(self, database, seedable)
         fk_map = validate_fk_map(self, database, fk_map)
-        ordered = topo_sort(seedable, fk_map)
+
+        if fk_map:
+            ordered = topo_sort(seedable, fk_map)
+        else:
+            # FK metadata unavailable — use hardcoded order for known test tables
+            known = {name for name, _ in _SEED_ORDER}
+            ordered = [name for name, _ in _SEED_ORDER if name in set(seedable)]
+            ordered += [t for t in seedable if t not in known]
+            fk_map = {k: v for k, v in _FK_MAP.items() if k in set(seedable)}
+
         parent_cache: dict[tuple[str, str], list[Any]] = {}
 
         for name in ordered:
@@ -373,28 +392,37 @@ class TeradataDB:
     def purge_data(self, database: str) -> list[str]:
         """Delete all rows from every table in *database*.
 
-        Tables are purged in reverse FK order (children first) so that
-        parent-table deletes are not blocked by existing child rows.
+        Uses multiple passes: tables blocked by FK constraints on the first
+        pass are retried after their dependents have been deleted.  Stops
+        when a full pass makes no progress.
         """
-        from src.fk import discover_fk_map, topo_sort, validate_fk_map
-
         tables = [
             t["table_name"]
             for t in self.list_tables(database)
             if t.get("table_kind") == "T"
         ]
-        fk_map = discover_fk_map(self, database, tables)
-        fk_map = validate_fk_map(self, database, fk_map)
-        ordered = list(reversed(topo_sort(tables, fk_map)))
 
         purged: list[str] = []
+        remaining = list(tables)
+
         with self.conn.cursor() as cur:
-            for name in ordered:
-                db, tbl = ident(database), ident(name)
-                try:
-                    cur.execute(f"DELETE FROM {db}.{tbl}")
-                    purged.append(name)
-                    logger.info("Purged %s", name)
-                except teradatasql.DatabaseError as exc:
-                    logger.error("Error purging %s: %s", name, exc)
+            for _pass in range(len(tables) + 1):
+                still_remaining: list[str] = []
+                for name in remaining:
+                    db, tbl = ident(database), ident(name)
+                    try:
+                        cur.execute(f"DELETE FROM {db}.{tbl}")
+                        purged.append(name)
+                        logger.info("Purged %s", name)
+                    except Exception as exc:
+                        still_remaining.append(name)
+                        logger.debug("Deferred %s: %s", name, exc)
+                if not still_remaining or still_remaining == remaining:
+                    remaining = still_remaining
+                    break
+                remaining = still_remaining
+
+        for name in remaining:
+            logger.warning("Could not purge %s (FK constraint blocks delete)", name)
+
         return purged

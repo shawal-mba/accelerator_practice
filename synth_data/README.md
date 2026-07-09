@@ -11,6 +11,24 @@ git clone <repo-url> && cd synth_data
 uv sync
 ```
 
+Activate the virtual environment:
+
+```bash
+source .venv/bin/activate
+```
+
+You can now run the `synth` command directly:
+
+```bash
+synth --help
+```
+
+If you prefer not to activate the venv, prefix commands with `uv run`:
+
+```bash
+uv run synth --help
+```
+
 ## Configuration
 
 ### BigQuery
@@ -33,62 +51,92 @@ cp .env.example .env
 # edit .env with your Teradata host, user, and password
 ```
 
-The `.env` file is loaded automatically by the justfile. **Never commit `.env`** — it is gitignored.
+The `.env` file is loaded automatically. **Never commit `.env`** — it is gitignored.
 
 ## Usage
-
-All commands go through `just`. Run `just` with no args to see the full list.
 
 ### Analyse
 
 ```bash
-# List all datasets (BigQuery) or databases (Teradata)
-just analyze-bq
-just analyze-td
+# List all databases
+synth --engine teradata analyse
 
-# List tables in a dataset/database
-just analyze-bq my_dataset
-just analyze-td MY_DB
+# List tables in a database
+synth --engine teradata analyse MY_DB
+
+# List all tables across all databases
+synth --engine teradata analyse all
 ```
 
 ### Seed
 
 ```bash
 # Seed a single table with 100 rows (default)
-just seed-bq my_dataset my_table 100
-just seed-td MY_DB my_table 50
+synth --engine teradata seed MY_DB my_table --rows 100
 
-# Seed ALL tables in a dataset
-just seed-bq my_dataset
+# Seed ALL tables in a database (FK-aware: parents seeded first)
+synth --engine teradata seed MY_DB --rows 100
 
-# Save a report
-just seed-td MY_DB my_table 100 --output report.txt
+# Seed the same table across ALL databases
+synth --engine teradata seed all my_table --rows 100
+
+# Seed ALL tables in ALL databases
+synth --engine teradata seed all --rows 100
+
+# Save a report to file
+synth --engine teradata seed MY_DB --rows 100 --output report.txt
 ```
 
 ### Read
 
 ```bash
-just read-bq my_dataset my_table 20
-just read-td MY_DB my_table 10
+synth --engine teradata read MY_DB my_table --limit 20
 ```
 
 ### Test schema management
 
 ```bash
 # Create the full set of test tables (covers 40+ column types)
-just create-schema-bq my_dataset
-just create-schema-td MY_DB
+synth --engine teradata create-schema MY_DB
 
 # Drop all test tables
-just drop-schema-bq my_dataset
-just drop-schema-td MY_DB
+synth --engine teradata drop-schema MY_DB
 
 # Seed with referential integrity (parents first, FKs resolved)
-just seed-test-bq my_dataset
-just seed-test-td MY_DB
+synth --engine teradata seed-test MY_DB
+
+# Create/drop/seed across ALL databases
+synth --engine teradata create-schema all
+synth --engine teradata seed-test all
+synth --engine teradata drop-schema all
 ```
 
-### Quality checks
+### Verify referential integrity
+
+```bash
+# Check that all FK values in child tables exist in parent tables
+synth --engine teradata verify MY_DB
+synth --engine teradata verify all
+```
+
+### Purge data
+
+```bash
+# Delete all rows from every table (keeps schema)
+synth --engine teradata purge-data MY_DB
+synth --engine teradata purge-data all
+```
+
+### Typical reset workflow
+
+```bash
+synth --engine teradata purge-data MY_DB
+synth --engine teradata create-schema MY_DB
+synth --engine teradata seed-test MY_DB
+synth --engine teradata verify MY_DB
+```
+
+## Development
 
 ```bash
 just lint          # ruff check
@@ -96,7 +144,7 @@ just format        # ruff format
 just typecheck     # pyright
 just test          # pytest
 just check         # lint + typecheck + test
-just all           # format + check
+just words         # line count stats
 ```
 
 ## Architecture

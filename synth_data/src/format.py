@@ -138,7 +138,8 @@ def seed_result_table(results: list[tuple[str, int, str]]) -> None:
         if status == "ok":
             table.add_row(name, str(inserted), f"[green]{status}[/green]")
         else:
-            table.add_row(name, "-", f"[red]{status}[/red]")
+            short = status.split("\n")[0][:80]
+            table.add_row(name, "-", f"[red]{short}[/red]")
     console.print(Panel(table, title="Seed Results", border_style=_HEADING))
 
 
