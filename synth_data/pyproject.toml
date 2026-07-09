@@ -19,6 +19,7 @@ keywords = ["teradata", "bigquery", "gcp", "synthetic-data", "testing"]
 dependencies = [
     "faker>=40.28.1",
     "google-cloud-bigquery>=3.25.0",
+    "python-dotenv>=1.0.0",
     "rich>=13.0.0",
     "teradatasql>=20.0.0.62",
 ]

@@ -8,6 +8,8 @@ import os
 import sys
 from io import StringIO
 
+from dotenv import load_dotenv
+
 from lib.bigquery import BigQueryDB
 from lib.db import Database
 from lib.format import (
@@ -26,6 +28,8 @@ from lib.format import (
 )
 from lib.teradata import TeradataDB
 from lib.test_schema import FK_MAP, SEED_ORDER
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 

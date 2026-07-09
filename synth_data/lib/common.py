@@ -155,7 +155,7 @@ def match_column_td(col_name: str, td_type: str) -> Callable[[], Any]:
 
 # Teradata types that cannot be inserted via parameterized queries
 INLINE_TYPES = {
-    "TS", "OD", "TD", "TZ", "AT",
+    "TS", "OD", "TD", "TZ", "AT", "DA",
     "YR", "MO", "DY", "HR", "MI", "SC",
     "DM", "DV", "FD", "FS", "FT", "FY",
     "PD", "PS",
@@ -164,15 +164,27 @@ INLINE_TYPES = {
 
 def cast_td_value(col_name: str, td_type: str, value: Any) -> str:
     """Return a SQL CAST expression for Teradata types that can't be parameterized."""
-    from datetime import datetime
+    from datetime import date, datetime
     from datetime import time as dt_time
 
     if td_type in ("TS", "OD", "TD", "TZ"):
         if isinstance(value, datetime):
             ts_str = value.strftime("%Y-%m-%d %H:%M:%S")
+        elif isinstance(value, str):
+            # Handle ISO format strings from faker
+            # Remove microseconds and timezone info
+            ts_str = value.replace("T", " ").split(".")[0].split("+")[0].split("Z")[0]
         else:
             ts_str = str(value)
         return f"CAST('{ts_str}' AS TIMESTAMP(0))"
+    if td_type == "DA":
+        if isinstance(value, date):
+            date_str = value.strftime("%Y-%m-%d")
+        elif isinstance(value, str):
+            date_str = value.split("T")[0]
+        else:
+            date_str = str(value)
+        return f"DATE '{date_str}'"
     if td_type == "AT":
         if isinstance(value, dt_time):
             time_str = value.strftime("%H:%M:%S")
