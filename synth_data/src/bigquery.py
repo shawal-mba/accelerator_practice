@@ -93,31 +93,47 @@ class BigQueryDB:
         return [row[column] for row in self.client.query(query).result()]
 
     def get_foreign_keys(self, database: str, table: str) -> list[dict[str, str]]:
-        query = """
-            SELECT
-                kcu.column_name,
-                kcu.referenced_table_name AS ref_table,
-                kcu.referenced_column_name AS ref_column
-            FROM `{project}.{dataset}.INFORMATION_SCHEMA.KEY_COLUMN_USAGE` AS kcu
-            JOIN `{project}.{dataset}.INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS` AS rc
-                ON kcu.constraint_catalog = rc.constraint_catalog
-                AND kcu.constraint_schema = rc.constraint_schema
-                AND kcu.constraint_name = rc.constraint_name
-            WHERE kcu.table_name = @table
-              AND kcu.referenced_table_name IS NOT NULL
-        """.format(
-            project=self.project, dataset=database
-        )
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("table", "STRING", table),
-            ]
-        )
-        rows = self.client.query(query, job_config=job_config).result()
-        return [
-            {"column": row.column_name, "ref_table": row.ref_table, "ref_column": row.ref_column}
-            for row in rows
-        ]
+        # Use cached batch result if available
+        cache_key = f"_fk_cache_{database}"
+        if not hasattr(self, cache_key):
+            cache: dict[str, list[dict[str, str]]] = {}
+            try:
+                query = """
+                    SELECT
+                        kcu.table_name,
+                        kcu.column_name,
+                        kcu.referenced_table_name AS ref_table,
+                        kcu.referenced_column_name AS ref_column
+                    FROM `{project}.INFORMATION_SCHEMA.KEY_COLUMN_USAGE` AS kcu
+                    JOIN `{project}.INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS` AS rc
+                        ON kcu.constraint_catalog = rc.constraint_catalog
+                        AND kcu.constraint_schema = rc.constraint_schema
+                        AND kcu.constraint_name = rc.constraint_name
+                    WHERE kcu.referenced_table_name IS NOT NULL
+                      AND kcu.table_schema = @dataset
+                """.format(
+                    project=self.project
+                )
+                job_config = bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ScalarQueryParameter("dataset", "STRING", database),
+                    ]
+                )
+                rows = self.client.query(query, job_config=job_config).result()
+                for row in rows:
+                    cache.setdefault(row.table_name, []).append(
+                        {
+                            "column": row.column_name,
+                            "ref_table": row.ref_table,
+                            "ref_column": row.ref_column,
+                        }
+                    )
+            except (NotFound, Exception):
+                # INFORMATION_SCHEMA may not be available in all locations
+                pass
+            setattr(self, cache_key, cache)
+
+        return getattr(self, cache_key).get(table, [])
 
     # ── Write operations ─────────────────────────────────────────────────────
 

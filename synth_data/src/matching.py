@@ -34,7 +34,7 @@ COLUMN_KEYWORD_MAP: list[tuple[str, Callable[[], Any]]] = [
     (r"name", fake.name),
     # contact
     (r"email|e_?mail", fake.email),
-    (r"phone|mobile|cell", fake.phone_number),
+    (r"phone|mobile|cell", lambda: re.sub(r"x\d+$", "", fake.phone_number())),
     # location
     (r"address|street|addr", fake.street_address),
     (r"city", fake.city),
