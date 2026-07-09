@@ -48,48 +48,31 @@ install:
 build:
     uv build
 
-# ── BigQuery commands ────────────────────────────────────────────────────────
+# ── Database commands ────────────────────────────────────────────────────────
+# Usage: just <command> <engine> [args...]
+#   engine: bigquery | teradata
+#   For BigQuery, set GOOGLE_CLOUD_PROJECT in .env or pass --project.
 
-analyze-bq *ARGS:
-    {{ cli }} --engine bigquery --project {{ gcp_project }} analyze {{ ARGS }}
+analyze engine *ARGS:
+    {{ cli }} --engine {{engine}} analyze {{ARGS}}
 
-seed-bq dataset table rows:
-    {{ cli }} --engine bigquery --project {{ gcp_project }} seed {{ dataset }} {{ table }} --rows {{ rows }}
+seed engine database table rows:
+    {{ cli }} --engine {{engine}} seed {{database}} {{table}} --rows {{rows}}
 
-read-bq dataset table limit:
-    {{ cli }} --engine bigquery --project {{ gcp_project }} read {{ dataset }} {{ table }} --limit {{ limit }}
+seed-all engine database rows:
+    {{ cli }} --engine {{engine}} seed {{database}} --rows {{rows}}
 
-create-schema-bq dataset:
-    {{ cli }} --engine bigquery --project {{ gcp_project }} create-schema {{ dataset }}
+read engine database table limit:
+    {{ cli }} --engine {{engine}} read {{database}} {{table}} --limit {{limit}}
 
-drop-schema-bq dataset:
-    {{ cli }} --engine bigquery --project {{ gcp_project }} drop-schema {{ dataset }}
+create-schema engine database:
+    {{ cli }} --engine {{engine}} create-schema {{database}}
 
-purge-data-bq dataset:
-    {{ cli }} --engine bigquery --project {{ gcp_project }} purge-data {{ dataset }}
+drop-schema engine database:
+    {{ cli }} --engine {{engine}} drop-schema {{database}}
 
-seed-test-bq dataset:
-    {{ cli }} --engine bigquery --project {{ gcp_project }} seed-test {{ dataset }}
+purge engine database:
+    {{ cli }} --engine {{engine}} purge-data {{database}}
 
-# ── Teradata commands ────────────────────────────────────────────────────────
-
-analyze-td *ARGS:
-    {{ cli }} --engine teradata analyze {{ ARGS }}
-
-seed-td database table rows:
-    {{ cli }} --engine teradata seed {{ database }} {{ table }} --rows {{ rows }}
-
-read-td database table limit:
-    {{ cli }} --engine teradata read {{ database }} {{ table }} --limit {{ limit }}
-
-create-schema-td database:
-    {{ cli }} --engine teradata create-schema {{ database }}
-
-drop-schema-td database:
-    {{ cli }} --engine teradata drop-schema {{ database }}
-
-purge-data-td database:
-    {{ cli }} --engine teradata purge-data {{ database }}
-
-seed-test-td database:
-    {{ cli }} --engine teradata seed-test {{ database }}
+seed-test engine database:
+    {{ cli }} --engine {{engine}} seed-test {{database}}

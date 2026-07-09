@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-import argparse
 import logging
 import os
-import sys
+import traceback
 from io import StringIO
 from typing import Any
 
+import click
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.panel import Panel
 
 from lib.bigquery import BigQueryDB
 from lib.fk import discover_fk_map, resolve_fk_overrides, validate_fk_map
@@ -21,12 +23,10 @@ from lib.format import (
     dataset_list,
     dim,
     dropped,
-    error,
     heading,
     seed_result_table,
     success,
     table_list,
-    warning,
 )
 from lib.log import setup_file_log
 from lib.protocol import Database
@@ -35,7 +35,12 @@ from lib.test_schema import FK_MAP, SEED_ORDER
 
 load_dotenv()
 
+console = Console()
+
 logger = logging.getLogger(__name__)
+
+
+# ── Exceptions ───────────────────────────────────────────────────────────────
 
 
 class SynthDataError(Exception):
@@ -50,27 +55,20 @@ class TableError(SynthDataError):
     """Table not found or inaccessible."""
 
 
-def _setup_logging(verbose: bool) -> None:
-    level = logging.DEBUG if verbose else logging.WARNING
-    logging.basicConfig(
-        level=level,
-        format="%(levelname)s %(name)s: %(message)s",
-        force=True,
-    )
+# ── Helpers ──────────────────────────────────────────────────────────────────
 
 
-def _get_db(args: argparse.Namespace) -> Database:
-    engine = args.engine
+def _get_db(engine: str, project: str | None, host: str | None, user: str | None) -> Database:
     if engine == "bigquery":
-        project = args.project or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+        project = project or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
         if not project:
             raise ConfigError(
                 "project is required for BigQuery. Pass --project or set GOOGLE_CLOUD_PROJECT."
             )
         db: Database = BigQueryDB(project=project)
     elif engine == "teradata":
-        host = args.host or os.environ.get("TERADATA_HOST", "")
-        user = args.user or os.environ.get("TERADATA_USER", "")
+        host = host or os.environ.get("TERADATA_HOST", "")
+        user = user or os.environ.get("TERADATA_USER", "")
         password = os.environ.get("TERADATA_PASSWORD", "")
         if not all([host, user, password]):
             raise ConfigError(
@@ -83,8 +81,18 @@ def _get_db(args: argparse.Namespace) -> Database:
     return db
 
 
+def _resolve_databases(db: Database, database: str) -> list[str]:
+    """Return the list of databases to operate on.
+
+    If *database* is ``"all"``, every database in the connection is returned.
+    Otherwise a single-element list is returned.
+    """
+    if database == "all":
+        return db.list_databases()
+    return [database]
+
+
 def _format_column(col: Any, engine: str) -> str:
-    """Format a column tuple for display."""
     if engine == "bigquery":
         suffix = " [REPEATED]" if len(col) > 2 and col[2] else ""
         return f"{col[0]} ({col[1]}{suffix})"
@@ -110,237 +118,251 @@ def _build_seed_report(
     return buf.getvalue()
 
 
-def cmd_analyze(args: argparse.Namespace) -> None:
-    db = _get_db(args)
+def _setup_logging(verbose: bool) -> None:
+    level = logging.DEBUG if verbose else logging.WARNING
+    logging.basicConfig(
+        level=level,
+        format="%(levelname)s %(name)s: %(message)s",
+        force=True,
+    )
+
+
+# ── CLI ──────────────────────────────────────────────────────────────────────
+
+
+@click.group()
+@click.option("--engine", type=click.Choice(["bigquery", "teradata"]), required=True)
+@click.option("--project", envvar="GOOGLE_CLOUD_PROJECT", default=None)
+@click.option("--host", envvar="TERADATA_HOST", default=None)
+@click.option("--user", envvar="TERADATA_USER", default=None)
+@click.option("-v", "--verbose", is_flag=True)
+@click.pass_context
+def cli(
+    ctx: click.Context,
+    engine: str,
+    project: str | None,
+    host: str | None,
+    user: str | None,
+    verbose: bool,
+) -> None:
+    """Unified CLI for Teradata and BigQuery: analyse, seed, and test schemas."""
+    ctx.ensure_object(dict)
+    ctx.obj["engine"] = engine
+    ctx.obj["project"] = project
+    ctx.obj["host"] = host
+    ctx.obj["user"] = user
+    _setup_logging(verbose)
+
+
+@cli.command()
+@click.argument("database", required=False)
+@click.pass_context
+def analyze(ctx: click.Context, database: str | None) -> None:
+    """List databases/datasets or tables."""
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     with db:
         databases = db.list_databases()
-        database = args.database or ""
         if database:
             tables = db.list_tables(database)
-            kind_key = "table_type" if args.engine == "bigquery" else "table_kind"
+            kind_key = "table_type" if ctx.obj["engine"] == "bigquery" else "table_kind"
             table_list(database, tables, kind_key=kind_key)
-        elif args.engine == "bigquery":
+        elif ctx.obj["engine"] == "bigquery":
             dataset_list(databases)
         else:
             database_list(databases)
 
 
-def cmd_seed(args: argparse.Namespace) -> None:
-    db = _get_db(args)
+@cli.command()
+@click.argument("database")
+@click.argument("table", required=False, default=None)
+@click.option("--rows", default=100, help="Number of rows")
+@click.option("-o", "--output", default=None, help="Write report to file")
+@click.pass_context
+def seed(
+    ctx: click.Context, database: str, table: str | None, rows: int, output: str | None
+) -> None:
+    """Insert fake data into existing table(s). Pass 'all' as database to seed every database."""
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
     with db:
-        database = args.database
-        if args.table:
-            log = setup_file_log("seed", args.engine, database)
-            log.info("Seeding %s.%s (%d rows)", database, args.table, args.rows)
+        for db_name in _resolve_databases(db, database):
+            if table:
+                log = setup_file_log("seed", engine, db_name)
+                log.info("Seeding %s.%s (%d rows)", db_name, table, rows)
 
-            columns = db.get_columns(database, args.table)
-            if not columns:
-                raise TableError(f"{database}.{args.table} not found or has no columns.")
+                columns = db.get_columns(db_name, table)
+                if not columns:
+                    console.print(f"[yellow]Skipping {db_name}.{table}: no columns found[/yellow]")
+                    continue
 
-            # FK discovery: query the database metadata for foreign key constraints
-            # on this table so we can pull matching values from parent tables.
-            # Without this, seed would generate random FK values that violate
-            # referential integrity and cause constraint violations on insert.
-            fk_map = discover_fk_map(db, database, [args.table])
-            fk_map = validate_fk_map(db, database, fk_map)
-            log.info("FK map for %s: %s", args.table, fk_map)
+                # FK discovery: query the database metadata for foreign key
+                # constraints on this table so we can pull matching values
+                # from parent tables.  Without this, seed would generate
+                # random FK values that violate referential integrity.
+                fk_map = discover_fk_map(db, db_name, [table])
+                fk_map = validate_fk_map(db, db_name, fk_map)
+                log.info("FK map for %s: %s", table, fk_map)
 
-            parent_cache: dict[tuple[str, str], list[Any]] = {}
-            fk_overrides = resolve_fk_overrides(
-                db, database, args.table, fk_map, parent_cache
-            )
-            if fk_overrides is None:
-                log.warning("Skipping %s: parent table has no rows", args.table)
-                warning(
-                    f"Skipping {database}.{args.table}: parent table has no rows. "
-                    f"Seed the parent table first."
+                parent_cache: dict[tuple[str, str], list[Any]] = {}
+                fk_overrides = resolve_fk_overrides(
+                    db, db_name, table, fk_map, parent_cache
                 )
-                return
-            if fk_overrides:
-                for col, vals in fk_overrides.items():
-                    log.info("Resolved FK %s: %d parent values", col, len(vals))
+                if fk_overrides is None:
+                    log.warning("Skipping %s: parent table has no rows", table)
+                    console.print(
+                        f"[yellow]Skipping {db_name}.{table}: "
+                        f"parent table has no rows.[/yellow]"
+                    )
+                    continue
+                if fk_overrides:
+                    for col, vals in fk_overrides.items():
+                        log.info("Resolved FK %s: %d parent values", col, len(vals))
 
-            column_list(database, args.table, columns, engine=args.engine)
+                column_list(db_name, table, columns, engine=engine)
 
-            inserted = db.insert_fake_rows(
-                database, args.table, columns, num_rows=args.rows,
-                fk_overrides=fk_overrides,
-            )
-            log.info("Inserted %d rows into %s.%s", inserted, database, args.table)
-            success(f"\nInserted {inserted} rows into {database}.{args.table}")
+                inserted = db.insert_fake_rows(
+                    db_name, table, columns, num_rows=rows, fk_overrides=fk_overrides
+                )
+                log.info("Inserted %d rows into %s.%s", inserted, db_name, table)
+                success(f"\nInserted {inserted} rows into {db_name}.{table}")
+            else:
+                log = setup_file_log("seed-all", engine, db_name)
+                log.info("Seeding all tables in %s (%d rows each)", db_name, rows)
 
-            if args.output:
-                single = [(args.table, inserted, "ok")]
-                report = _build_seed_report(db, database, single, args.engine)
-                with open(args.output, "w") as f:
-                    f.write(report)
-                dim(f"Report written to {args.output}")
-        else:
-            log = setup_file_log("seed-all", args.engine, database)
-            log.info("Seeding all tables in %s (%d rows each)", database, args.rows)
+                heading(f"Seeding all tables in {db_name}...")
 
-            heading(f"Seeding all tables in {database}...")
+                # seed_all discovers FKs from database metadata, topo-sorts
+                # tables, and seeds parents before children automatically.
+                results = db.seed_all(db_name, num_rows=rows)
+                seed_result_table(results)
 
-            # seed_all discovers FKs from database metadata, topo-sorts
-            # tables, and seeds parents before children automatically.
-            results = db.seed_all(database, num_rows=args.rows)
-            seed_result_table(results)
+                for name, inserted, status in results:
+                    log.info("%s: %s (%s)", name, inserted, status)
 
-            for name, inserted, status in results:
-                log.info("%s: %s (%s)", name, inserted, status)
-
-            report = _build_seed_report(db, database, results, args.engine)
-            if args.output:
-                with open(args.output, "w") as f:
-                    f.write(report)
-                dim(f"\nReport written to {args.output}")
+        if output:
+            report = _build_seed_report(db, database, [], engine)
+            with open(output, "w") as f:
+                f.write(report)
+            dim(f"\nReport written to {output}")
 
 
-def cmd_read(args: argparse.Namespace) -> None:
-    db = _get_db(args)
+@cli.command()
+@click.argument("database")
+@click.argument("table")
+@click.option("--limit", default=20, help="Max rows")
+@click.pass_context
+def read(ctx: click.Context, database: str, table: str, limit: int) -> None:
+    """Read rows from a table."""
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     with db:
-        col_names = db.get_column_names(args.database, args.table)
-        rows = db.read_table(args.database, args.table, limit=args.limit)
+        col_names = db.get_column_names(database, table)
+        rows = db.read_table(database, table, limit=limit)
         data_table(col_names, rows)
         dim(f"({len(rows)} rows)")
 
 
-def cmd_create_schema(args: argparse.Namespace) -> None:
-    db = _get_db(args)
+@cli.command(name="create-schema")
+@click.argument("database")
+@click.pass_context
+def create_schema(ctx: click.Context, database: str) -> None:
+    """Create test tables with all column types. Pass 'all' for every database."""
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     with db:
-        heading(f"Creating test tables in {args.database}")
-        created_tables = db.create_schema(args.database)
-        created(len(created_tables))
+        for db_name in _resolve_databases(db, database):
+            heading(f"Creating test tables in {db_name}")
+            created_tables = db.create_schema(db_name)
+            created(len(created_tables))
 
 
-def cmd_drop_schema(args: argparse.Namespace) -> None:
-    db = _get_db(args)
+@cli.command(name="drop-schema")
+@click.argument("database")
+@click.pass_context
+def drop_schema(ctx: click.Context, database: str) -> None:
+    """Drop all test tables. Pass 'all' for every database."""
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     with db:
-        heading(f"Dropping test tables in {args.database}")
-        dropped_tables = db.drop_schema(args.database)
-        dropped(len(dropped_tables))
+        for db_name in _resolve_databases(db, database):
+            heading(f"Dropping test tables in {db_name}")
+            dropped_tables = db.drop_schema(db_name)
+            dropped(len(dropped_tables))
 
 
-def cmd_purge(args: argparse.Namespace) -> None:
-    db = _get_db(args)
+@cli.command(name="purge-data")
+@click.argument("database")
+@click.pass_context
+def purge_data(ctx: click.Context, database: str) -> None:
+    """Delete all rows from every table. Pass 'all' to purge every database."""
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
     with db:
-        log = setup_file_log("purge", args.engine, args.database)
-        log.info("Purging all data in %s", args.database)
+        for db_name in _resolve_databases(db, database):
+            log = setup_file_log("purge", engine, db_name)
+            log.info("Purging all data in %s", db_name)
 
-        heading(f"Purging all data in {args.database}")
-        purged = db.purge_data(args.database)
-        success(f"Purged {len(purged)} tables")
-        log.info("Purged %d tables: %s", len(purged), purged)
+            heading(f"Purging all data in {db_name}")
+            purged = db.purge_data(db_name)
+            success(f"Purged {len(purged)} tables in {db_name}")
+            log.info("Purged %d tables: %s", len(purged), purged)
 
 
-def cmd_seed_test(args: argparse.Namespace) -> None:
-    db = _get_db(args)
+@cli.command(name="seed-test")
+@click.argument("database")
+@click.option("-o", "--output", default=None, help="Write report to file")
+@click.pass_context
+def seed_test(ctx: click.Context, database: str, output: str | None) -> None:
+    """Seed test tables with referential integrity. Pass 'all' for every database."""
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
     with db:
-        log = setup_file_log("seed-test", args.engine, args.database)
-        log.info("Seeding test tables in %s with referential integrity", args.database)
-        log.info("Seed order: %s", [name for name, _ in SEED_ORDER])
-        log.info("FK map: %s", FK_MAP)
+        all_results: list[tuple[str, int, str]] = []
+        for db_name in _resolve_databases(db, database):
+            log = setup_file_log("seed-test", engine, db_name)
+            log.info(
+                "Seeding test tables in %s with referential integrity", db_name
+            )
+            log.info("Seed order: %s", [name for name, _ in SEED_ORDER])
+            log.info("FK map: %s", FK_MAP)
 
-        heading(f"Seeding test tables in {args.database} with referential integrity")
-        results = db.seed_with_relations(args.database, SEED_ORDER, FK_MAP)
-        seed_result_table(results)
+            heading(f"Seeding test tables in {db_name} with referential integrity")
+            results = db.seed_with_relations(db_name, SEED_ORDER, FK_MAP)
+            seed_result_table(results)
 
-        for name, inserted, status in results:
-            log.info("%s: %s (%s)", name, inserted, status)
+            for name, inserted, status in results:
+                log.info("%s: %s (%s)", name, inserted, status)
+            all_results.extend(results)
 
-        report = _build_seed_report(db, args.database, results, args.engine)
-        if args.output:
-            with open(args.output, "w") as f:
+        if output:
+            report = _build_seed_report(db, database, all_results, engine)
+            with open(output, "w") as f:
                 f.write(report)
-            dim(f"Report written to {args.output}")
+            dim(f"Report written to {output}")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        prog="synth-data",
-        description="Unified CLI for Teradata and BigQuery: analyse, seed, and test schemas.",
-    )
-    parser.add_argument(
-        "--engine",
-        choices=["bigquery", "teradata"],
-        required=True,
-        help="Database engine to use",
-    )
-    parser.add_argument(
-        "--project",
-        help="GCP project (BigQuery only, or env GOOGLE_CLOUD_PROJECT)",
-    )
-    parser.add_argument("--host", help="Teradata host (or env TERADATA_HOST)")
-    parser.add_argument("--user", help="Teradata user (or env TERADATA_USER)")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
-
-    sub = parser.add_subparsers(dest="command")
-
-    # --- analyze ---
-    p_analyze = sub.add_parser("analyze", help="List databases/datasets or tables")
-    p_analyze.add_argument("--database", help="If provided, list tables in this database/dataset")
-    p_analyze.set_defaults(func=cmd_analyze)
-
-    # --- seed ---
-    p_seed = sub.add_parser("seed", help="Insert fake data into existing table(s)")
-    p_seed.add_argument("database", help="Target database/dataset")
-    p_seed.add_argument("table", nargs="?", default=None, help="Table to seed (all if omitted)")
-    p_seed.add_argument("--rows", type=int, default=100, help="Number of rows (100)")
-    p_seed.add_argument("--output", "-o", help="Write report to file")
-    p_seed.set_defaults(func=cmd_seed)
-
-    # --- read ---
-    p_read = sub.add_parser("read", help="Read rows from a table")
-    p_read.add_argument("database", help="Target database/dataset")
-    p_read.add_argument("table", help="Table to read")
-    p_read.add_argument("--limit", type=int, default=20, help="Max rows (20)")
-    p_read.set_defaults(func=cmd_read)
-
-    # --- create-schema ---
-    p_create = sub.add_parser("create-schema", help="Create test tables with all column types")
-    p_create.add_argument("database", help="Target database/dataset")
-    p_create.set_defaults(func=cmd_create_schema)
-
-    # --- drop-schema ---
-    p_drop = sub.add_parser("drop-schema", help="Drop all test tables")
-    p_drop.add_argument("database", help="Target database/dataset")
-    p_drop.set_defaults(func=cmd_drop_schema)
-
-    # --- purge-data ---
-    p_purge = sub.add_parser("purge-data", help="Delete all rows from every table")
-    p_purge.add_argument("database", help="Target database/dataset")
-    p_purge.set_defaults(func=cmd_purge)
-
-    # --- seed-test ---
-    p_seed_test = sub.add_parser(
-        "seed-test",
-        help="Seed test tables with referential integrity",
-    )
-    p_seed_test.add_argument("database", help="Target database/dataset")
-    p_seed_test.add_argument("--output", "-o", help="Write report to file")
-    p_seed_test.set_defaults(func=cmd_seed_test)
-
-    args = parser.parse_args()
-    _setup_logging(args.verbose)
-
-    if not hasattr(args, "func"):
-        parser.print_help()
-        return
-
     try:
-        args.func(args)
-    except ConfigError as exc:
-        error(f"Configuration error: {exc}")
-        sys.exit(1)
-    except TableError as exc:
-        error(f"Table error: {exc}")
-        sys.exit(1)
-    except SynthDataError as exc:
-        error(f"Error: {exc}")
-        sys.exit(1)
-    except KeyboardInterrupt:
+        cli(standalone_mode=False)
+    except click.exceptions.Abort:
         dim("\nInterrupted.")
-        sys.exit(130)
+    except click.exceptions.UsageError as exc:
+        console.print(Panel(f"[bold red]Usage error:[/bold red]\n{exc}", title="Error"))
+        raise SystemExit(1) from exc
+    except ConfigError as exc:
+        console.print(Panel(f"[bold red]Configuration error:[/bold red]\n{exc}", title="Error"))
+        raise SystemExit(1) from exc
+    except TableError as exc:
+        console.print(Panel(f"[bold red]Table error:[/bold red]\n{exc}", title="Error"))
+        raise SystemExit(1) from exc
+    except SynthDataError as exc:
+        console.print(Panel(f"[bold red]Error:[/bold red]\n{exc}", title="Error"))
+        raise SystemExit(1) from exc
+    except Exception:
+        console.print(
+            Panel(
+                f"[bold red]Unexpected error:[/bold red]\n{traceback.format_exc()}",
+                title="Error",
+            )
+        )
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
