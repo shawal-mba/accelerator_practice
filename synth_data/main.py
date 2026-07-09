@@ -221,6 +221,18 @@ def cmd_drop_schema(args: argparse.Namespace) -> None:
         dropped(len(dropped_tables))
 
 
+def cmd_purge(args: argparse.Namespace) -> None:
+    db = _get_db(args)
+    with db:
+        log = setup_file_log("purge", args.engine, args.database)
+        log.info("Purging all data in %s", args.database)
+
+        heading(f"Purging all data in {args.database}")
+        purged = db.purge_data(args.database)
+        success(f"Purged {len(purged)} tables")
+        log.info("Purged %d tables: %s", len(purged), purged)
+
+
 def cmd_seed_test(args: argparse.Namespace) -> None:
     db = _get_db(args)
     with db:
@@ -293,6 +305,11 @@ def main() -> None:
     p_drop = sub.add_parser("drop-schema", help="Drop all test tables")
     p_drop.add_argument("database", help="Target database/dataset")
     p_drop.set_defaults(func=cmd_drop_schema)
+
+    # --- purge-data ---
+    p_purge = sub.add_parser("purge-data", help="Delete all rows from every table")
+    p_purge.add_argument("database", help="Target database/dataset")
+    p_purge.set_defaults(func=cmd_purge)
 
     # --- seed-test ---
     p_seed_test = sub.add_parser(

@@ -303,3 +303,31 @@ class BigQueryDB:
             except GoogleAPIError as exc:
                 logger.error("Error dropping %s: %s", t["name"], exc)
         return dropped
+
+    def purge_data(self, database: str) -> list[str]:
+        """Delete all rows from every table in *database*.
+
+        Tables are purged in reverse FK order (children first) so that
+        parent-table deletes are not blocked by existing child rows.
+        """
+        from lib.fk import discover_fk_map, topo_sort, validate_fk_map
+
+        tables = [
+            t["table_name"]
+            for t in self.list_tables(database)
+            if t.get("table_type") == "TABLE"
+        ]
+        fk_map = discover_fk_map(self, database, tables)
+        fk_map = validate_fk_map(self, database, fk_map)
+        ordered = list(reversed(topo_sort(tables, fk_map)))
+
+        purged: list[str] = []
+        for name in ordered:
+            try:
+                full_id = f"{self.project}.{database}.{name}"
+                self.client.query(f"DELETE FROM `{full_id}` WHERE true").result()
+                purged.append(name)
+                logger.info("Purged %s", name)
+            except GoogleAPIError as exc:
+                logger.error("Error purging %s: %s", name, exc)
+        return purged
