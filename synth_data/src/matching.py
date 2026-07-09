@@ -38,9 +38,12 @@ COLUMN_KEYWORD_MAP: list[tuple[str, Callable[[], Any]]] = [
     # location
     (r"address|street|addr", fake.street_address),
     (r"city", fake.city),
-    (r"state|province", fake.province),
+    (r"state|province|region", fake.province),
     (r"zip|postal|postcode", fake.postcode),
-    (r"country", fake.country_code),
+    (r"country", fake.country),
+    (r"country_?code", fake.country_code),
+    (r"latitude|lat", lambda: fake.latitude()),
+    (r"longitude|lon|lng", lambda: fake.longitude()),
     # company / job
     (r"company|corp|organisation|organization", fake.company),
     (r"job_?title|title|role|position", fake.job),
@@ -50,9 +53,13 @@ COLUMN_KEYWORD_MAP: list[tuple[str, Callable[[], Any]]] = [
         lambda: round(fake.pyfloat(min_value=0, max_value=10_000), 2),
     ),
     (r"credit_?card|card_?number|cc_?num", fake.credit_card_number),
+    (r"iban", fake.iban),
+    (r"currency_?code", fake.currency_code),
     # ids
     (r"ssn|social_?security", fake.ssn),
     (r"uuid|guid", fake.uuid4),
+    (r"isbn", fake.isbn13),
+    (r"mac_?address|mac", fake.mac_address),
     # dates
     (
         r"created_?at|updated_?at|timestamp|datetime",
@@ -62,11 +69,21 @@ COLUMN_KEYWORD_MAP: list[tuple[str, Callable[[], Any]]] = [
         r"date|day|dob|birth",
         lambda: fake.date_between(start_date="-5y", end_date="today").isoformat(),
     ),
-    # misc text
+    (r"year", lambda: str(fake.year())),
+    (r"month", fake.month),
+    # internet / tech
     (r"url|link|website", fake.url),
+    (r"domain|hostname", fake.domain_name),
     (r"ip|ip_?address", fake.ipv4),
+    (r"slug", fake.slug),
+    (r"password|passwd", fake.password),
+    (r"hash|sha|md5", fake.sha256),
+    (r"mime|content_?type", fake.mime_type),
+    (r"file_?ext|extension", fake.file_extension),
+    (r"timezone|tz", fake.timezone),
+    # misc text
     (r"text|description|comment|note|summary", fake.sentence),
-    (r"color|colour", fake.color_name),
+    (r"color|colour|hex_?color", fake.hex_color),
     (r"lorem", fake.paragraph),
 ]
 
@@ -126,6 +143,8 @@ TD_TYPE_MAP: dict[str, Callable[[], Any]] = {
     # character
     "CF": fake.word,
     "CV": fake.word,
+    "CH": fake.word,
+    "CHR": fake.word,
     # integer
     "I": lambda: fake.pyint(min_value=0, max_value=100_000),
     "I1": lambda: fake.pyint(min_value=0, max_value=127),
@@ -133,6 +152,8 @@ TD_TYPE_MAP: dict[str, Callable[[], Any]] = {
     "I3": lambda: fake.pyint(min_value=-2_147_483_648, max_value=2_147_483_647),
     "I8": lambda: fake.pyint(min_value=0, max_value=10_000_000),
     "I9": lambda: fake.pyint(min_value=-10_000_000, max_value=10_000_000),
+    "BT": lambda: fake.pyint(min_value=0, max_value=127),
+    "SM": lambda: fake.pyint(min_value=0, max_value=32_767),
     # decimal / float
     "D": lambda: round(fake.pyfloat(min_value=0, max_value=10_000), 2),
     "F": lambda: round(fake.pyfloat(min_value=0, max_value=10_000), 2),
@@ -171,10 +192,12 @@ TD_TYPE_MAP: dict[str, Callable[[], Any]] = {
         fake.date_time_between(start_date="-5y", end_date="-1y").strftime("%Y-%m-%d %H:%M:%S"),
         fake.date_time_between(start_date="-1y", end_date="+1y").strftime("%Y-%m-%d %H:%M:%S"),
     ),
-    # semi-structured
+    # semi-structured / LOB
     "JN": fake.json,
     "XM": fake.xml,
     "UT": fake.uuid4,
+    "CO": lambda: fake.text(max_nb_chars=200),
+    "LOB": lambda: fake.binary(100).hex(),
 }
 
 
