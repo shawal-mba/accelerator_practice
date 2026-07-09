@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 from io import StringIO
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -79,6 +80,14 @@ def _get_db(args: argparse.Namespace) -> Database:
     return db
 
 
+def _format_column(col: Any, engine: str) -> str:
+    """Format a column tuple for display."""
+    if engine == "bigquery":
+        suffix = " [REPEATED]" if len(col) > 2 and col[2] else ""
+        return f"{col[0]} ({col[1]}{suffix})"
+    return f"{col[0]} ({col[1]})"
+
+
 def _build_seed_report(
     db: Database, database: str, results: list[tuple[str, int, str]], engine: str
 ) -> str:
@@ -88,11 +97,7 @@ def _build_seed_report(
         buf.write(f"=== {database}.{name} ===\n")
         if status == "ok":
             cols = db.get_columns(database, name)
-            if engine == "bigquery":
-                parts = [f"{c[0]} ({c[1]}{' [REPEATED]' if c[2] else ''})" for c in cols]
-                col_str = ", ".join(parts)
-            else:
-                col_str = ", ".join(f"{c[0]} ({c[1]})" for c in cols)
+            col_str = ", ".join(_format_column(c, engine) for c in cols)
             buf.write(f"Columns: {col_str}\n")
             buf.write(f"Inserted {inserted} rows\n\n")
             total_inserted += inserted

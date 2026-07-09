@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import random
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 import teradatasql
@@ -50,6 +50,8 @@ class TeradataDB:
             raise RuntimeError("Not connected. Call connect() first.")
         return self._conn
 
+    # ── Read operations ──────────────────────────────────────────────────────
+
     def list_databases(self) -> list[str]:
         with self.conn.cursor() as cur:
             cur.execute("SELECT DatabaseName FROM DBC.DatabasesV ORDER BY 1")
@@ -82,19 +84,34 @@ class TeradataDB:
             return [row[0] for row in cur.fetchall()]
 
     def read_table(self, database: str, table: str, limit: int = 20) -> list[tuple]:
-        db = _ident(database)
-        tbl = _ident(table)
+        db, tbl = _ident(database), _ident(table)
         with self.conn.cursor() as cur:
             cur.execute(f"SELECT * FROM {db}.{tbl} SAMPLE {limit}")
             return cur.fetchall()
 
     def read_column_values(self, database: str, table: str, column: str) -> list[Any]:
-        db = _ident(database)
-        tbl = _ident(table)
-        col = _ident(column)
+        db, tbl, col = _ident(database), _ident(table), _ident(column)
         with self.conn.cursor() as cur:
             cur.execute(f"SELECT DISTINCT {col} FROM {db}.{tbl} WHERE {col} IS NOT NULL")
             return [row[0] for row in cur.fetchall()]
+
+    # ── Write operations ─────────────────────────────────────────────────────
+
+    def _generate_value(
+        self,
+        col: str,
+        gen: Callable[[], Any],
+        td_type: str,
+        fk_overrides: dict[str, list[Any]] | None,
+    ) -> Any:
+        """Generate a single value for a column, applying FK override if present."""
+        if fk_overrides and col in fk_overrides:
+            raw = random.choice(fk_overrides[col])
+        else:
+            raw = gen()
+        if td_type in INLINE_TYPES:
+            return cast_td_value(col, td_type, raw)
+        return raw
 
     def insert_fake_rows(
         self,
@@ -108,81 +125,117 @@ class TeradataDB:
         if not columns:
             raise ValueError(f"Table {database}.{table} has no columns")
 
-        generators = [match_column_td(name, td_type) for name, td_type in columns]
-        col_name_list = [name for name, _ in columns]
-        td_types = [td_type for _, td_type in columns]
+        generators = [match_column_td(n, t) for n, t in columns]
+        col_names = [n for n, _ in columns]
+        td_types = [t for _, t in columns]
         has_inline = any(t in INLINE_TYPES for t in td_types)
 
-        db = _ident(database)
-        tbl = _ident(table)
+        db, tbl = _ident(database), _ident(table)
         inserted = 0
         with self.conn.cursor() as cur:
             for offset in range(0, num_rows, batch_size):
                 batch = min(batch_size, num_rows - offset)
                 if has_inline:
-                    for _ in range(batch):
-                        values: list[Any] = []
-                        for i, gen in enumerate(generators):
-                            col = col_name_list[i]
-                            td_type = td_types[i]
-                            if fk_overrides and col in fk_overrides:
-                                raw = random.choice(fk_overrides[col])
-                            else:
-                                raw = gen()
-                            if td_type in INLINE_TYPES:
-                                values.append(cast_td_value(col, td_type, raw))
-                            else:
-                                values.append(raw)
-
-                        parts = []
-                        param_values = []
-                        for i, val in enumerate(values):
-                            if td_types[i] in INLINE_TYPES:
-                                parts.append(val)
-                            else:
-                                parts.append("?")
-                                param_values.append(val)
-
-                        sql = (
-                            f"INSERT INTO {db}.{tbl} "
-                            f"({', '.join(col_name_list)}) "
-                            f"VALUES ({', '.join(parts)})"
-                        )
-                        cur.execute(sql, param_values)
-                        inserted += 1
+                    inserted += self._insert_inline(
+                        cur, db, tbl, col_names, td_types, generators, fk_overrides, batch
+                    )
                 else:
-                    col_names_str = ", ".join(col_name_list)
-                    placeholders = ", ".join("?" for _ in columns)
-                    sql = f"INSERT INTO {db}.{tbl} ({col_names_str}) VALUES ({placeholders})"
-                    rows = []
-                    for _ in range(batch):
-                        row = []
-                        for i, gen in enumerate(generators):
-                            col = col_name_list[i]
-                            if fk_overrides and col in fk_overrides:
-                                row.append(random.choice(fk_overrides[col]))
-                            else:
-                                row.append(gen())
-                        rows.append(row)
-                    cur.executemany(sql, rows)
-                    inserted += batch
+                    inserted += self._insert_batched(
+                        cur, db, tbl, col_names, generators, fk_overrides, batch
+                    )
         return inserted
 
+    def _insert_inline(
+        self,
+        cur: Any,
+        db: str,
+        tbl: str,
+        col_names: list[str],
+        td_types: list[str],
+        generators: list[Callable[[], Any]],
+        fk_overrides: dict[str, list[Any]] | None,
+        batch: int,
+    ) -> int:
+        """Insert rows one-by-one with inline CAST expressions."""
+        inserted = 0
+        for _ in range(batch):
+            values = [
+                self._generate_value(col, gen, td_type, fk_overrides)
+                for col, gen, td_type in zip(col_names, generators, td_types)
+            ]
+
+            parts = []
+            param_values = []
+            for i, val in enumerate(values):
+                if td_types[i] in INLINE_TYPES:
+                    parts.append(val)
+                else:
+                    parts.append("?")
+                    param_values.append(val)
+
+            sql = (
+                f"INSERT INTO {db}.{tbl} "
+                f"({', '.join(col_names)}) VALUES ({', '.join(parts)})"
+            )
+            cur.execute(sql, param_values)
+            inserted += 1
+        return inserted
+
+    def _insert_batched(
+        self,
+        cur: Any,
+        db: str,
+        tbl: str,
+        col_names: list[str],
+        generators: list[Callable[[], Any]],
+        fk_overrides: dict[str, list[Any]] | None,
+        batch: int,
+    ) -> int:
+        """Insert rows in bulk via executemany."""
+        col_names_str = ", ".join(col_names)
+        placeholders = ", ".join("?" for _ in col_names)
+        sql = f"INSERT INTO {db}.{tbl} ({col_names_str}) VALUES ({placeholders})"
+
+        rows = [
+            [
+                random.choice(fk_overrides[col]) if fk_overrides and col in fk_overrides else gen()
+                for col, gen in zip(col_names, generators)
+            ]
+            for _ in range(batch)
+        ]
+        cur.executemany(sql, rows)
+        return batch
+
+    # ── Seed operations ──────────────────────────────────────────────────────
+
+    def _is_seedable(self, table_meta: dict[str, str]) -> bool:
+        return table_meta.get("table_kind") == "T"
+
+    def _seed_table(
+        self,
+        database: str,
+        name: str,
+        num_rows: int,
+        fk_overrides: dict[str, list[Any]] | None = None,
+    ) -> tuple[str, int, str]:
+        """Seed a single table. Returns (name, inserted, status)."""
+        columns = self.get_columns(database, name)
+        if not columns:
+            return (name, 0, "no columns found")
+        inserted = self.insert_fake_rows(
+            database, name, columns, num_rows, fk_overrides=fk_overrides
+        )
+        return (name, inserted, "ok")
+
     def seed_all(self, database: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
-        tables = self.list_tables(database)
         results: list[tuple[str, int, str]] = []
-        for t in tables:
+        for t in self.list_tables(database):
             name = t["table_name"]
-            if t["table_kind"] != "T":
+            if not self._is_seedable(t):
                 results.append((name, 0, f"skipped ({t['table_kind']})"))
                 continue
             try:
-                columns = self.get_columns(database, name)
-                if not columns:
-                    results.append((name, 0, "no columns found"))
-                    continue
-                inserted = self.insert_fake_rows(database, name, columns, num_rows)
-                results.append((name, inserted, "ok"))
+                results.append(self._seed_table(database, name, num_rows))
             except (ValueError, RuntimeError, teradatasql.DatabaseError) as exc:
                 logger.warning("Failed to seed %s: %s", name, exc)
                 results.append((name, 0, str(exc)))
@@ -199,39 +252,39 @@ class TeradataDB:
 
         for table_id, num_rows in seed_order:
             try:
-                columns = self.get_columns(database, table_id)
-                if not columns:
-                    results.append((table_id, 0, "no columns found"))
-                    continue
-
-                fk_overrides: dict[str, list[Any]] = {}
-                table_fks = fk_map.get(table_id, {})
-                skip = False
-                for child_col, (parent_table, parent_col) in table_fks.items():
-                    cache_key = (parent_table, parent_col)
-                    if cache_key not in parent_cache:
-                        parent_cache[cache_key] = self.read_column_values(
-                            database, parent_table, parent_col
-                        )
-                    values = parent_cache[cache_key]
-                    if not values:
-                        msg = f"parent {parent_table}.{parent_col} is empty"
-                        results.append((table_id, 0, msg))
-                        skip = True
-                        break
-                    fk_overrides[child_col] = values
-
-                if skip:
-                    continue
-
-                inserted = self.insert_fake_rows(
-                    database, table_id, columns, num_rows, fk_overrides=fk_overrides
+                fk_overrides = self._resolve_fk_overrides(
+                    database, table_id, fk_map, parent_cache
                 )
-                results.append((table_id, inserted, "ok"))
+                if fk_overrides is None:
+                    continue
+                results.append(self._seed_table(database, table_id, num_rows, fk_overrides))
             except (ValueError, RuntimeError, teradatasql.DatabaseError) as exc:
                 logger.warning("Failed to seed %s: %s", table_id, exc)
                 results.append((table_id, 0, str(exc)))
         return results
+
+    def _resolve_fk_overrides(
+        self,
+        database: str,
+        table_id: str,
+        fk_map: dict[str, dict[str, tuple[str, str]]],
+        parent_cache: dict[tuple[str, str], list[Any]],
+    ) -> dict[str, list[Any]] | None:
+        """Resolve FK parent values. Returns None if a parent is empty."""
+        overrides: dict[str, list[Any]] = {}
+        for child_col, (parent_table, parent_col) in fk_map.get(table_id, {}).items():
+            cache_key = (parent_table, parent_col)
+            if cache_key not in parent_cache:
+                parent_cache[cache_key] = self.read_column_values(
+                    database, parent_table, parent_col
+                )
+            values = parent_cache[cache_key]
+            if not values:
+                return None
+            overrides[child_col] = values
+        return overrides
+
+    # ── Schema management ────────────────────────────────────────────────────
 
     def create_schema(self, database: str) -> list[str]:
         from lib.test_schema import TD_TEST_TABLES

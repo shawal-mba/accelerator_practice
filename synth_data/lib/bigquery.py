@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import random
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from google.api_core.exceptions import GoogleAPIError, NotFound
@@ -47,6 +47,8 @@ class BigQueryDB:
     def project(self) -> str:
         return self.client.project
 
+    # ── Read operations ──────────────────────────────────────────────────────
+
     def list_databases(self) -> list[str]:
         return sorted(ds.dataset_id for ds in self.client.list_datasets())
 
@@ -57,14 +59,12 @@ class BigQueryDB:
         return sorted(tables, key=lambda t: t["table_name"])
 
     def get_columns(self, database: str, table: str) -> Sequence[tuple[Any, ...]]:
-        table_ref = self.client.get_table(f"{self.project}.{database}.{table}")
-        return [
-            (field.name, field.field_type, field.mode == "REPEATED") for field in table_ref.schema
-        ]
+        ref = self.client.get_table(f"{self.project}.{database}.{table}")
+        return [(f.name, f.field_type, f.mode == "REPEATED") for f in ref.schema]
 
     def get_column_names(self, database: str, table: str) -> list[str]:
-        table_ref = self.client.get_table(f"{self.project}.{database}.{table}")
-        return [field.name for field in table_ref.schema]
+        ref = self.client.get_table(f"{self.project}.{database}.{table}")
+        return [f.name for f in ref.schema]
 
     def read_table(self, database: str, table: str, limit: int = 20) -> list[tuple]:
         query = f"SELECT * FROM `{self.project}.{database}.{table}` LIMIT {limit}"
@@ -76,6 +76,47 @@ class BigQueryDB:
             f"WHERE `{column}` IS NOT NULL"
         )
         return [row[column] for row in self.client.query(query).result()]
+
+    # ── Write operations ─────────────────────────────────────────────────────
+
+    def _build_record_gens(
+        self, schema: list[bigquery.SchemaField]
+    ) -> dict[str, list[tuple[str, Callable[[], Any]]]]:
+        """Build generators for RECORD/STRUCT sub-fields."""
+        result: dict[str, list[tuple[str, Callable[[], Any]]]] = {}
+        for field in schema:
+            if field.field_type in ("RECORD", "STRUCT") and field.fields:
+                result[field.name] = [
+                    (sub.name, match_column_bq(sub.name, sub.field_type))
+                    for sub in field.fields
+                ]
+        return result
+
+    def _generate_row(
+        self,
+        col_names: list[str],
+        generators: list[Callable[[], Any]],
+        repeated_flags: list[bool],
+        fk_overrides: dict[str, list[Any]] | None,
+        record_gens: dict[str, list[tuple[str, Callable[[], Any]]]],
+    ) -> dict[str, Any]:
+        """Generate a single fake row as a dict."""
+        values: list[Any] = []
+        for i, gen in enumerate(generators):
+            col = col_names[i]
+            if fk_overrides and col in fk_overrides:
+                values.append(random.choice(fk_overrides[col]))
+            elif col in record_gens:
+                values.append({name: g() for name, g in record_gens[col]})
+            else:
+                values.append(gen())
+
+        return dict(
+            zip(
+                col_names,
+                [v if not rep else [v] for v, rep in zip(values, repeated_flags)],
+            )
+        )
 
     def insert_fake_rows(
         self,
@@ -90,60 +131,54 @@ class BigQueryDB:
             raise ValueError(f"Table {database}.{table} has no columns")
 
         table_ref = self.client.get_table(f"{self.project}.{database}.{table}")
-
-        record_gens: dict[str, list[tuple[str, Any]]] = {}
-        for field in table_ref.schema:
-            if field.field_type in ("RECORD", "STRUCT") and field.fields:
-                record_gens[field.name] = [
-                    (sub.name, match_column_bq(sub.name, sub.field_type)) for sub in field.fields
-                ]
-
-        generators = [match_column_bq(name, bq_type) for name, bq_type, _ in columns]
-        col_names = [name for name, _, _ in columns]
-        repeated_flags = [repeated for _, _, repeated in columns]
+        record_gens = self._build_record_gens(table_ref.schema)
+        generators = [match_column_bq(n, t) for n, t, _ in columns]
+        col_names = [n for n, _, _ in columns]
+        repeated = [r for _, _, r in columns]
 
         inserted = 0
         for offset in range(0, num_rows, batch_size):
             batch = min(batch_size, num_rows - offset)
-            rows = []
-            for _ in range(batch):
-                raw_values: list[Any] = []
-                for i, gen in enumerate(generators):
-                    col = col_names[i]
-                    if fk_overrides and col in fk_overrides:
-                        raw_values.append(random.choice(fk_overrides[col]))
-                    elif col in record_gens:
-                        raw_values.append({name: g() for name, g in record_gens[col]})
-                    else:
-                        raw_values.append(gen())
-                row = dict(
-                    zip(
-                        col_names,
-                        [v if not rep else [v] for v, rep in zip(raw_values, repeated_flags)],
-                    )
-                )
-                rows.append(row)
+            rows = [
+                self._generate_row(col_names, generators, repeated, fk_overrides, record_gens)
+                for _ in range(batch)
+            ]
             errors = self.client.insert_rows_json(table_ref, rows)
             if errors:
                 raise RuntimeError(f"Insert errors: {errors}")
             inserted += batch
         return inserted
 
+    # ── Seed operations ──────────────────────────────────────────────────────
+
+    def _is_seedable(self, table_meta: dict[str, str]) -> bool:
+        return table_meta.get("table_type") == "TABLE"
+
+    def _seed_table(
+        self,
+        database: str,
+        name: str,
+        num_rows: int,
+        fk_overrides: dict[str, list[Any]] | None = None,
+    ) -> tuple[str, int, str]:
+        """Seed a single table. Returns (name, inserted, status)."""
+        columns = self.get_columns(database, name)
+        if not columns:
+            return (name, 0, "no columns found")
+        inserted = self.insert_fake_rows(
+            database, name, columns, num_rows, fk_overrides=fk_overrides
+        )
+        return (name, inserted, "ok")
+
     def seed_all(self, database: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
-        tables = self.list_tables(database)
         results: list[tuple[str, int, str]] = []
-        for t in tables:
+        for t in self.list_tables(database):
             name = t["table_name"]
-            if t["table_type"] != "TABLE":
+            if not self._is_seedable(t):
                 results.append((name, 0, f"skipped ({t['table_type']})"))
                 continue
             try:
-                columns = self.get_columns(database, name)
-                if not columns:
-                    results.append((name, 0, "no columns found"))
-                    continue
-                inserted = self.insert_fake_rows(database, name, columns, num_rows)
-                results.append((name, inserted, "ok"))
+                results.append(self._seed_table(database, name, num_rows))
             except (ValueError, RuntimeError) as exc:
                 logger.warning("Failed to seed %s: %s", name, exc)
                 results.append((name, 0, str(exc)))
@@ -160,39 +195,39 @@ class BigQueryDB:
 
         for table_id, num_rows in seed_order:
             try:
-                columns = self.get_columns(database, table_id)
-                if not columns:
-                    results.append((table_id, 0, "no columns found"))
-                    continue
-
-                fk_overrides: dict[str, list[Any]] = {}
-                table_fks = fk_map.get(table_id, {})
-                skip = False
-                for child_col, (parent_table, parent_col) in table_fks.items():
-                    cache_key = (parent_table, parent_col)
-                    if cache_key not in parent_cache:
-                        parent_cache[cache_key] = self.read_column_values(
-                            database, parent_table, parent_col
-                        )
-                    values = parent_cache[cache_key]
-                    if not values:
-                        msg = f"parent {parent_table}.{parent_col} is empty"
-                        results.append((table_id, 0, msg))
-                        skip = True
-                        break
-                    fk_overrides[child_col] = values
-
-                if skip:
-                    continue
-
-                inserted = self.insert_fake_rows(
-                    database, table_id, columns, num_rows, fk_overrides=fk_overrides
+                fk_overrides = self._resolve_fk_overrides(
+                    database, table_id, fk_map, parent_cache
                 )
-                results.append((table_id, inserted, "ok"))
+                if fk_overrides is None:
+                    continue  # parent empty — skip
+                results.append(self._seed_table(database, table_id, num_rows, fk_overrides))
             except (ValueError, RuntimeError) as exc:
                 logger.warning("Failed to seed %s: %s", table_id, exc)
                 results.append((table_id, 0, str(exc)))
         return results
+
+    def _resolve_fk_overrides(
+        self,
+        database: str,
+        table_id: str,
+        fk_map: dict[str, dict[str, tuple[str, str]]],
+        parent_cache: dict[tuple[str, str], list[Any]],
+    ) -> dict[str, list[Any]] | None:
+        """Resolve FK parent values. Returns None if a parent is empty."""
+        overrides: dict[str, list[Any]] = {}
+        for child_col, (parent_table, parent_col) in fk_map.get(table_id, {}).items():
+            cache_key = (parent_table, parent_col)
+            if cache_key not in parent_cache:
+                parent_cache[cache_key] = self.read_column_values(
+                    database, parent_table, parent_col
+                )
+            values = parent_cache[cache_key]
+            if not values:
+                return None
+            overrides[child_col] = values
+        return overrides
+
+    # ── Schema management ────────────────────────────────────────────────────
 
     def create_schema(self, database: str) -> list[str]:
         from lib.test_schema import BQ_TEST_TABLES, _make_schema_field
@@ -200,12 +235,10 @@ class BigQueryDB:
         created: list[str] = []
         for t in BQ_TEST_TABLES:
             table_id = t["name"]
-            schema_fields = t["columns"]
-            description = t["description"]
             full_id = f"{self.project}.{database}.{table_id}"
-            schema = [_make_schema_field(f) for f in schema_fields]
+            schema = [_make_schema_field(f) for f in t["columns"]]
             table = bigquery.Table(full_id, schema=schema)
-            table.description = description
+            table.description = t["description"]
             table = self.client.create_table(table, exists_ok=True)
             created.append(table_id)
             logger.info("Created %s (%d columns)", table_id, len(schema))
@@ -215,14 +248,14 @@ class BigQueryDB:
         from lib.test_schema import BQ_TEST_TABLES
 
         dropped: list[str] = []
-        for table_id, _, _ in BQ_TEST_TABLES:
-            full_id = f"{self.project}.{database}.{table_id}"
+        for t in BQ_TEST_TABLES:
+            full_id = f"{self.project}.{database}.{t['name']}"
             try:
                 self.client.delete_table(full_id, not_found_ok=True)
-                dropped.append(table_id)
-                logger.info("Dropped %s", table_id)
+                dropped.append(t["name"])
+                logger.info("Dropped %s", t["name"])
             except NotFound:
-                logger.debug("Table %s not found, skipping", table_id)
+                logger.debug("Table %s not found, skipping", t["name"])
             except GoogleAPIError as exc:
-                logger.error("Error dropping %s: %s", table_id, exc)
+                logger.error("Error dropping %s: %s", t["name"], exc)
         return dropped
