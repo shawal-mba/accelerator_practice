@@ -1,4 +1,24 @@
+# Environment
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Caches
+.pytest_cache/
+.ruff_cache/
+
+# Teradata
 teradata/metadata
 teradata/output
-teradata/.venv
-teradata/**/__pycache__
