@@ -32,13 +32,27 @@ from src.format import (
 from src.log import setup_file_log
 from src.protocol import Database
 from src.teradata import TeradataDB
-from src.test_schema import FK_MAP, SEED_ORDER
 
 load_dotenv()
 
 console = Console()
 
 logger = logging.getLogger(__name__)
+
+SCHEMAS = {
+    "1": "src.test_schema",
+    "2": "src.test_schema_2",
+}
+
+
+def _load_schema(schema_id: str) -> Any:
+    """Load a test schema module by ID ('1' or '2')."""
+    import importlib
+
+    module_path = SCHEMAS.get(schema_id)
+    if not module_path:
+        raise click.UsageError(f"Unknown schema '{schema_id}'. Choose from: {', '.join(SCHEMAS)}")
+    return importlib.import_module(module_path)
 
 
 # ── Exceptions ───────────────────────────────────────────────────────────────
@@ -136,6 +150,8 @@ def _setup_logging(verbose: bool) -> None:
 @click.option("--project", envvar="GOOGLE_CLOUD_PROJECT", default=None)
 @click.option("--host", envvar="TERADATA_HOST", default=None)
 @click.option("--user", envvar="TERADATA_USER", default=None)
+@click.option("--database", envvar="DATABASE", default=None, help="Default database/dataset")
+@click.option("--schema", "schema_id", default="1", help="Test schema (1 or 2)")
 @click.option("-v", "--verbose", is_flag=True)
 @click.pass_context
 def cli(
@@ -144,6 +160,8 @@ def cli(
     project: str | None,
     host: str | None,
     user: str | None,
+    database: str | None,
+    schema_id: str,
     verbose: bool,
 ) -> None:
     """synth-data: synthetic data generator for Teradata and BigQuery."""
@@ -152,14 +170,17 @@ def cli(
     ctx.obj["project"] = project
     ctx.obj["host"] = host
     ctx.obj["user"] = user
+    ctx.obj["default_database"] = database
+    ctx.obj["schema"] = _load_schema(schema_id)
     _setup_logging(verbose)
 
 
 @cli.command()
-@click.argument("database", required=False)
+@click.argument("database", required=False, default=None)
 @click.pass_context
 def analyse(ctx: click.Context, database: str | None) -> None:
     """List databases/datasets or tables. Pass 'all' to list tables in every database."""
+    database = database or ctx.obj.get("default_database")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
@@ -185,15 +206,18 @@ def analyse(ctx: click.Context, database: str | None) -> None:
 
 
 @cli.command()
-@click.argument("database")
+@click.argument("database", required=False, default=None)
 @click.argument("table", required=False, default=None)
 @click.option("--rows", default=100, help="Number of rows")
 @click.option("-o", "--output", default=None, help="Write report to file")
 @click.pass_context
 def seed(
-    ctx: click.Context, database: str, table: str | None, rows: int, output: str | None
+    ctx: click.Context, database: str | None, table: str | None, rows: int, output: str | None
 ) -> None:
     """Insert fake data into existing table(s). Pass 'all' as database to seed every database."""
+    database = database or ctx.obj.get("default_database")
+    if not database:
+        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
@@ -266,12 +290,15 @@ def seed(
 
 
 @cli.command()
-@click.argument("database")
+@click.argument("database", required=False, default=None)
 @click.argument("table")
 @click.option("--limit", default=20, help="Max rows")
 @click.pass_context
-def read(ctx: click.Context, database: str, table: str, limit: int) -> None:
+def read(ctx: click.Context, database: str | None, table: str, limit: int) -> None:
     """Read rows from a table."""
+    database = database or ctx.obj.get("default_database")
+    if not database:
+        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
@@ -285,44 +312,55 @@ def read(ctx: click.Context, database: str, table: str, limit: int) -> None:
 
 
 @cli.command(name="create-schema")
-@click.argument("database")
+@click.argument("database", required=False, default=None)
 @click.pass_context
-def create_schema(ctx: click.Context, database: str) -> None:
-    """Create test tables with all column types. Pass 'all' for every database."""
+def create_schema(ctx: click.Context, database: str | None) -> None:
+    """Create test tables. Pass 'all' for every database."""
+    database = database or ctx.obj.get("default_database")
+    if not database:
+        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
+    schema = ctx.obj["schema"]
     with db:
         for db_name in _resolve_databases(db, database):
             log = setup_file_log("create-schema", engine, db_name)
             log.info("Creating test tables in %s", db_name)
             heading(f"Creating test tables in {db_name}")
-            created_tables = db.create_schema(db_name)
+            created_tables = db.create_schema(db_name, schema)
             log.info("Created %d tables in %s", len(created_tables), db_name)
             created(len(created_tables))
 
 
 @cli.command(name="drop-schema")
-@click.argument("database")
+@click.argument("database", required=False, default=None)
 @click.pass_context
-def drop_schema(ctx: click.Context, database: str) -> None:
+def drop_schema(ctx: click.Context, database: str | None) -> None:
     """Drop all test tables. Pass 'all' for every database."""
+    database = database or ctx.obj.get("default_database")
+    if not database:
+        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
+    schema = ctx.obj["schema"]
     with db:
         for db_name in _resolve_databases(db, database):
             log = setup_file_log("drop-schema", engine, db_name)
             log.info("Dropping test tables in %s", db_name)
             heading(f"Dropping test tables in {db_name}")
-            dropped_tables = db.drop_schema(db_name)
+            dropped_tables = db.drop_schema(db_name, schema)
             log.info("Dropped %d tables in %s", len(dropped_tables), db_name)
             dropped(len(dropped_tables))
 
 
 @cli.command(name="purge-data")
-@click.argument("database")
+@click.argument("database", required=False, default=None)
 @click.pass_context
-def purge_data(ctx: click.Context, database: str) -> None:
+def purge_data(ctx: click.Context, database: str | None) -> None:
     """Delete all rows from every table. Pass 'all' to purge every database."""
+    database = database or ctx.obj.get("default_database")
+    if not database:
+        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
@@ -337,13 +375,19 @@ def purge_data(ctx: click.Context, database: str) -> None:
 
 
 @cli.command(name="seed-test")
-@click.argument("database")
+@click.argument("database", required=False, default=None)
 @click.option("-o", "--output", default=None, help="Write report to file")
 @click.pass_context
-def seed_test(ctx: click.Context, database: str, output: str | None) -> None:
+def seed_test(ctx: click.Context, database: str | None, output: str | None) -> None:
     """Seed test tables with referential integrity. Pass 'all' for every database."""
+    database = database or ctx.obj.get("default_database")
+    if not database:
+        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
+    schema = ctx.obj["schema"]
+    SEED_ORDER = schema.SEED_ORDER
+    FK_MAP = schema.FK_MAP
     with db:
         all_results: list[tuple[str, int, str]] = []
         for db_name in _resolve_databases(db, database):
@@ -370,16 +414,20 @@ def seed_test(ctx: click.Context, database: str, output: str | None) -> None:
 
 
 @cli.command()
-@click.argument("database")
+@click.argument("database", required=False, default=None)
 @click.pass_context
-def verify(ctx: click.Context, database: str) -> None:
+def verify(ctx: click.Context, database: str | None) -> None:
     """Check referential integrity of seeded data.
 
     Discovers all FK relationships and verifies that every child value
     exists in the parent table. Reports orphaned rows.
     """
+    database = database or ctx.obj.get("default_database")
+    if not database:
+        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
+    schema = ctx.obj["schema"]
     with db:
         for db_name in _resolve_databases(db, database):
             log = setup_file_log("verify", engine, db_name)
@@ -399,7 +447,7 @@ def verify(ctx: click.Context, database: str) -> None:
                 # FK metadata unavailable — fall back to hardcoded test-schema FKs
                 fk_map = {
                     k: v
-                    for k, v in FK_MAP.items()
+                    for k, v in schema.FK_MAP.items()
                     if k in set(tables)
                 }
 

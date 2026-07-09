@@ -111,9 +111,15 @@ synth --engine teradata purge-data all
 ### Test schema — create, seed, and drop predefined test tables
 
 ```bash
+# Schema 1: 33 tables (basic test types + simple FK chain)
 synth --engine teradata create-schema MY_DB
 synth --engine teradata seed-test MY_DB
 synth --engine teradata drop-schema MY_DB
+
+# Schema 2: 100 tables (full ISP company — customers, billing, network, support)
+synth --engine teradata --schema 2 create-schema MY_DB
+synth --engine teradata --schema 2 seed-test MY_DB
+synth --engine teradata --schema 2 drop-schema MY_DB
 ```
 
 ### Typical workflow
@@ -203,7 +209,8 @@ src/
   fk.py                Shared foreign-key resolution + topological sort
   format.py            Rich console output (panels, tables)
   log.py               Per-operation file logging
-  test_schema.py       Test table DDL definitions (BQ + TD)
+  test_schema.py       Schema 1: 33 test tables (basic types + FK chain)
+  test_schema_2.py     Schema 2: 100 ISP tables (customers, billing, network, support)
 tests/
   test_synth_data.py   Unit tests for matching, casting, and schema logic
 ```

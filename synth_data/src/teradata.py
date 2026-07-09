@@ -344,8 +344,10 @@ class TeradataDB:
 
     # ── Schema management ────────────────────────────────────────────────────
 
-    def create_schema(self, database: str) -> list[str]:
-        from src.test_schema import TD_TEST_TABLES
+    def create_schema(self, database: str, schema_module: Any = None) -> list[str]:
+        if schema_module is None:
+            from src import test_schema as schema_module
+        TD_TEST_TABLES = schema_module.TD_TEST_TABLES
 
         db = ident(database)
         created: list[str] = []
@@ -372,8 +374,10 @@ class TeradataDB:
                         logger.info("%s already exists", table_name)
         return created
 
-    def drop_schema(self, database: str) -> list[str]:
-        from src.test_schema import TD_TEST_TABLES
+    def drop_schema(self, database: str, schema_module: Any = None) -> list[str]:
+        if schema_module is None:
+            from src import test_schema as schema_module
+        TD_TEST_TABLES = schema_module.TD_TEST_TABLES
 
         db = ident(database)
         dropped: list[str] = []

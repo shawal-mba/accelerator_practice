@@ -153,9 +153,10 @@ class TestBqSchema:
     def test_parents_before_children_in_seed_order(self):
         """Parent tables must appear before children in SEED_ORDER for FK resolution."""
         order = [name for name, _ in SEED_ORDER]
-        assert order.index("test_products") < order.index("test_order_items")
-        assert order.index("test_customers") < order.index("test_orders")
-        assert order.index("test_orders") < order.index("test_order_items")
+        assert order.index("customers") < order.index("customer_accounts")
+        assert order.index("customers") < order.index("invoices")
+        assert order.index("customer_accounts") < order.index("payments")
+        assert order.index("invoices") < order.index("invoice_items")
 
 
 class TestTdSchema:

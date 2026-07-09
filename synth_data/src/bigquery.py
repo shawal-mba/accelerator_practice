@@ -301,8 +301,11 @@ class BigQueryDB:
 
     # ── Schema management ────────────────────────────────────────────────────
 
-    def create_schema(self, database: str) -> list[str]:
-        from src.test_schema import BQ_TEST_TABLES, _make_schema_field
+    def create_schema(self, database: str, schema_module: Any = None) -> list[str]:
+        if schema_module is None:
+            from src import test_schema as schema_module
+        BQ_TEST_TABLES = schema_module.BQ_TEST_TABLES
+        _make_schema_field = schema_module._make_schema_field
 
         created: list[str] = []
         for t in BQ_TEST_TABLES:
@@ -316,8 +319,10 @@ class BigQueryDB:
             logger.info("Created %s (%d columns)", table_id, len(schema))
         return created
 
-    def drop_schema(self, database: str) -> list[str]:
-        from src.test_schema import BQ_TEST_TABLES
+    def drop_schema(self, database: str, schema_module: Any = None) -> list[str]:
+        if schema_module is None:
+            from src import test_schema as schema_module
+        BQ_TEST_TABLES = schema_module.BQ_TEST_TABLES
 
         dropped: list[str] = []
         for t in BQ_TEST_TABLES:
