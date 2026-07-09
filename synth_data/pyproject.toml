@@ -13,7 +13,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
-    "Typing :: Typed",
 ]
 keywords = ["teradata", "bigquery", "gcp", "synthetic-data", "testing"]
 dependencies = [
@@ -44,6 +43,7 @@ dev = [
     "pytest-rich>=0.2.0",
     "pyright>=1.1.390",
     "ruff>=0.15.20",
+    "vulture>=2.16",
 ]
 
 [tool.pytest.ini_options]

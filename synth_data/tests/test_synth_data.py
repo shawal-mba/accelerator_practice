@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from lib.common import (
+from lib.matching import (
     _ident,
     cast_td_value,
     match_column_bq,

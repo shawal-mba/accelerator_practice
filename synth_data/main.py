@@ -11,7 +11,6 @@ from io import StringIO
 from dotenv import load_dotenv
 
 from lib.bigquery import BigQueryDB
-from lib.db import Database
 from lib.format import (
     column_list,
     created,
@@ -26,6 +25,7 @@ from lib.format import (
     success,
     table_list,
 )
+from lib.protocol import Database
 from lib.teradata import TeradataDB
 from lib.test_schema import FK_MAP, SEED_ORDER
 

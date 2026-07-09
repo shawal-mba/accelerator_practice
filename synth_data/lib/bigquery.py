@@ -10,7 +10,7 @@ from typing import Any
 from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import bigquery
 
-from lib.common import match_column_bq
+from lib.matching import match_column_bq
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ from typing import Any
 
 import teradatasql
 
-from lib.common import INLINE_TYPES, _ident, cast_td_value, match_column_td
+from lib.matching import INLINE_TYPES, _ident, cast_td_value, match_column_td
 
 logger = logging.getLogger(__name__)
 

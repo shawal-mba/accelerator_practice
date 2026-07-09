@@ -13,12 +13,10 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 STYLE_HEADING = "bold cyan"
-STYLE_COUNT = "yellow"
 STYLE_SUCCESS = "bold green"
 STYLE_ERROR = "bold red"
 STYLE_TABLE_NAME = "bold"
 STYLE_DIM = "dim"
-STYLE_HIGHLIGHT = "bold magenta"
 
 
 def heading(text: str) -> None:
