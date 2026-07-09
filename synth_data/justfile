@@ -2,24 +2,13 @@
 
 set dotenv-load
 
-gcp_project := "adg-internal-tech-sandbox"
-
-cli := "uv run synth-data"
-
 default:
     @just --list
 
-# ── Stats ────────────────────────────────────────────────────────────────────
-
 words:
-    @echo "Lines of code per Python file:"
-    @echo ""
     @wc -l *.py lib/*.py tests/*.py 2>/dev/null | grep -v total | sort -rn | awk '{printf "  %6d  %s\n", $1, $2}'
     @echo ""
-    @echo "Total:"
     @wc -l *.py lib/*.py tests/*.py 2>/dev/null | tail -1 | awk '{printf "  %6d  %s\n", $1, $2}'
-
-# ── Quality ──────────────────────────────────────────────────────────────────
 
 lint:
     uv run ruff check .
@@ -40,39 +29,8 @@ check: lint typecheck test
 
 all: format check
 
-# ── Build ────────────────────────────────────────────────────────────────────
-
 install:
     uv sync
 
 build:
     uv build
-
-# ── Database commands ────────────────────────────────────────────────────────
-# Usage: just <command> <engine> [args...]
-#   engine: bigquery | teradata
-#   For BigQuery, set GOOGLE_CLOUD_PROJECT in .env or pass --project.
-
-analyze engine *ARGS:
-    {{ cli }} --engine {{engine}} analyze {{ARGS}}
-
-seed engine database table rows:
-    {{ cli }} --engine {{engine}} seed {{database}} {{table}} --rows {{rows}}
-
-seed-all engine database rows:
-    {{ cli }} --engine {{engine}} seed {{database}} --rows {{rows}}
-
-read engine database table limit:
-    {{ cli }} --engine {{engine}} read {{database}} {{table}} --limit {{limit}}
-
-create-schema engine database:
-    {{ cli }} --engine {{engine}} create-schema {{database}}
-
-drop-schema engine database:
-    {{ cli }} --engine {{engine}} drop-schema {{database}}
-
-purge engine database:
-    {{ cli }} --engine {{engine}} purge-data {{database}}
-
-seed-test engine database:
-    {{ cli }} --engine {{engine}} seed-test {{database}}

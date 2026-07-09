@@ -1,6 +1,6 @@
 # synth-data
 
-Unified CLI for **Teradata** and **BigQuery**: analyse schemas, seed fake data, and manage test tables with referential integrity.
+Synthetic data generator for **Teradata** and **BigQuery**. Generates fake data with automatic referential integrity across foreign key relationships.
 
 ## Install
 

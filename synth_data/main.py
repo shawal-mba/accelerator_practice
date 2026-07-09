@@ -1,4 +1,4 @@
-"""Unified CLI for Teradata and BigQuery: analyse, seed, and test schemas."""
+"""synth-data: synthetic data generator for Teradata and BigQuery."""
 
 from __future__ import annotations
 
@@ -145,7 +145,7 @@ def cli(
     user: str | None,
     verbose: bool,
 ) -> None:
-    """Unified CLI for Teradata and BigQuery: analyse, seed, and test schemas."""
+    """synth-data: synthetic data generator for Teradata and BigQuery."""
     ctx.ensure_object(dict)
     ctx.obj["engine"] = engine
     ctx.obj["project"] = project
@@ -366,6 +366,85 @@ def seed_test(ctx: click.Context, database: str, output: str | None) -> None:
             with open(output, "w") as f:
                 f.write(report)
             dim(f"Report written to {output}")
+
+
+@cli.command()
+@click.argument("database")
+@click.pass_context
+def verify(ctx: click.Context, database: str) -> None:
+    """Check referential integrity of seeded data.
+
+    Discovers all FK relationships and verifies that every child value
+    exists in the parent table. Reports orphaned rows.
+    """
+    db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
+    engine = ctx.obj["engine"]
+    with db:
+        for db_name in _resolve_databases(db, database):
+            log = setup_file_log("verify", engine, db_name)
+            log.info("Verifying FK integrity in %s", db_name)
+            heading(f"Verifying FK integrity in {db_name}")
+
+            tables = [
+                t["table_name"]
+                for t in db.list_tables(db_name)
+                if t.get("table_type" if engine == "bigquery" else "table_kind")
+                == ("TABLE" if engine == "bigquery" else "T")
+            ]
+            fk_map = discover_fk_map(db, db_name, tables)
+            fk_map = validate_fk_map(db, db_name, fk_map)
+
+            if not fk_map:
+                console.print("[dim]No foreign key relationships found.[/dim]")
+                log.info("No FK relationships found")
+                continue
+
+            violations = 0
+            checked = 0
+            for child, fks in fk_map.items():
+                for child_col, (parent_table, parent_col) in fks.items():
+                    checked += 1
+                    child_vals = set(db.read_column_values(db_name, child, child_col))
+                    parent_vals = set(db.read_column_values(db_name, parent_table, parent_col))
+
+                    orphans = child_vals - parent_vals
+                    if orphans:
+                        sample = list(orphans)[:5]
+                        console.print(
+                            f"[red]FAIL[/red] {db_name}.{child}.{child_col} -> "
+                            f"{parent_table}.{parent_col}: "
+                            f"{len(orphans)} orphaned value(s) (e.g. {sample})"
+                        )
+                        log.warning(
+                            "FK violation: %s.%s -> %s.%s: %d orphans (e.g. %s)",
+                            child, child_col, parent_table, parent_col,
+                            len(orphans), sample,
+                        )
+                        violations += 1
+                    else:
+                        console.print(
+                            f"[green]OK[/green]   {db_name}.{child}.{child_col} -> "
+                            f"{parent_table}.{parent_col}: "
+                            f"{len(child_vals)} values, all valid"
+                        )
+                        log.info(
+                            "FK ok: %s.%s -> %s.%s: %d values",
+                            child, child_col, parent_table, parent_col,
+                            len(child_vals),
+                        )
+
+            if violations:
+                console.print(
+                    f"\n[bold red]{violations}/{checked} FK constraint(s) "
+                    f"violated in {db_name}[/bold red]"
+                )
+                log.error("%d/%d FK constraints violated", violations, checked)
+            else:
+                console.print(
+                    f"\n[bold green]{checked}/{checked} FK constraints "
+                    f"valid in {db_name}[/bold green]"
+                )
+                log.info("All %d FK constraints valid", checked)
 
 
 def main() -> None:

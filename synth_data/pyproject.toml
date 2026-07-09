@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "synth-data"
 version = "0.1.0"
-description = "Unified CLI for Teradata and BigQuery: analyse, seed, and test schemas."
+description = "Synthetic data generator for Teradata and BigQuery."
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{name = "ADG"}]
