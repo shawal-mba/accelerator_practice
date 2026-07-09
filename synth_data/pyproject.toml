@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "synth-data"
+version = "0.1.0"
+description = "Unified CLI for Teradata and BigQuery: analyse, seed, and test schemas."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{name = "ADG"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+keywords = ["teradata", "bigquery", "gcp", "synthetic-data", "testing"]
+dependencies = [
+    "faker>=40.28.1",
+    "google-cloud-bigquery>=3.25.0",
+    "rich>=13.0.0",
+    "teradatasql>=20.0.0.62",
+]
+
+[project.scripts]
+synth-data = "main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lib"]
+
+[tool.ruff]
+line-length = 99
+src = ["."]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "pytest-rich>=0.2.0",
+    "ruff>=0.15.20",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short --rich"
