@@ -97,11 +97,12 @@ TD_TYPE_MAP: dict[str, Callable[[], Any]] = {
         "%Y-%m-%d %H:%M:%S"
     ),  # TIMESTAMP WITH TIME ZONE
     # interval — use proper INTERVAL literal syntax
-    "SA": lambda: "INTERVAL '1' SECOND",  # INTERVAL SECOND
-    "SD": lambda: "INTERVAL '1' DAY",  # INTERVAL DAY
-    "SH": lambda: "INTERVAL '1' HOUR",  # INTERVAL HOUR
-    "SM": lambda: "INTERVAL '1' MINUTE",  # INTERVAL MINUTE
-    "SN": lambda: "INTERVAL '1' MONTH",  # INTERVAL MONTH
+    "YR": lambda: "INTERVAL '1' YEAR",  # INTERVAL YEAR
+    "MO": lambda: "INTERVAL '1' MONTH",  # INTERVAL MONTH
+    "DY": lambda: "INTERVAL '1' DAY",  # INTERVAL DAY
+    "HR": lambda: "INTERVAL '1' HOUR",  # INTERVAL HOUR
+    "MI": lambda: "INTERVAL '1' MINUTE",  # INTERVAL MINUTE
+    "SC": lambda: "INTERVAL '1' SECOND",  # INTERVAL SECOND
     "DM": lambda: "INTERVAL '1 00:01' DAY TO MINUTE",  # INTERVAL DAY TO MINUTE
     "DV": lambda: "INTERVAL '1 00:00:01' DAY TO SECOND",  # INTERVAL DAY TO SECOND
     "FD": lambda: "INTERVAL '1 00' DAY TO HOUR",  # INTERVAL DAY TO HOUR
@@ -109,20 +110,14 @@ TD_TYPE_MAP: dict[str, Callable[[], Any]] = {
     "FT": lambda: "INTERVAL '00:01' HOUR TO MINUTE",  # INTERVAL HOUR TO MINUTE
     "FY": lambda: "INTERVAL '0 00:01' MINUTE TO SECOND",  # INTERVAL MINUTE TO SECOND
     # period — use proper PERIOD literal syntax
-    "PA": lambda: (
+    "PD": lambda: (
         fake.date_between(start_date="-5y", end_date="-1y"),
         fake.date_between(start_date="-1y", end_date="+1y"),
     ),  # PERIOD(DATE)
-    "PM": lambda: (
-        fake.date_time_between(start_date="-5y", end_date="-1y").strftime("%Y-%m-%d %H:%M:%S"),
-        fake.date_time_between(start_date="-1y", end_date="+1y").strftime("%Y-%m-%d %H:%M:%S"),
-    ),  # PERIOD(TIMESTAMP)
     "PS": lambda: (
         fake.date_time_between(start_date="-5y", end_date="-1y").strftime("%Y-%m-%d %H:%M:%S"),
         fake.date_time_between(start_date="-1y", end_date="+1y").strftime("%Y-%m-%d %H:%M:%S"),
-    ),  # PERIOD(TIMESTAMP WITH TIME ZONE)
-    "PT": lambda: (fake.time_object(), fake.time_object()),  # PERIOD(TIME)
-    "PZ": lambda: (fake.time_object(), fake.time_object()),  # PERIOD(TIME WITH TIME ZONE)
+    ),  # PERIOD(TIMESTAMP)
     # json / xml
     "JN": fake.json,  # JSON
     "XM": fake.xml,  # XML
@@ -172,44 +167,60 @@ _INLINE_TYPES = {
     "OD",
     "TD",
     "TZ",
-    "SA",
-    "SD",
-    "SH",
-    "SM",
-    "SN",
+    "AT",
+    # intervals
+    "YR",
+    "MO",
+    "DY",
+    "HR",
+    "MI",
+    "SC",
+    # multi-element intervals
     "DM",
     "DV",
     "FD",
     "FS",
     "FT",
     "FY",
-    "PA",
-    "PM",
+    # period
+    "PD",
     "PS",
-    "PT",
-    "PZ",
 }
 
 
 def _cast_value(col_name: str, td_type: str, value: Any) -> str:
     """Return a SQL CAST expression for types that can't be parameterized."""
+    from datetime import datetime
+    from datetime import time as dt_time
+
     if td_type in ("TS", "OD", "TD", "TZ"):
-        # TIMESTAMP → CAST('...' AS TIMESTAMP(0))
-        return f"CAST('{value}' AS TIMESTAMP(0))"
-    if td_type in ("PA",):
+        if isinstance(value, datetime):
+            ts_str = value.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            ts_str = str(value)
+        return f"CAST('{ts_str}' AS TIMESTAMP(0))"
+    if td_type == "AT":
+        if isinstance(value, dt_time):
+            time_str = value.strftime("%H:%M:%S")
+        elif isinstance(value, datetime):
+            time_str = value.strftime("%H:%M:%S")
+        else:
+            time_str = str(value)
+        return f"CAST('{time_str}' AS TIME(0))"
+    if td_type == "PD":
         # PERIOD(DATE) → PERIOD(DATE '...', DATE '...')
         d1, d2 = value
         return f"PERIOD(DATE '{d1}', DATE '{d2}')"
-    if td_type in ("PM", "PS"):
+    if td_type == "PS":
         # PERIOD(TIMESTAMP) → PERIOD(TIMESTAMP '...', TIMESTAMP '...')
         t1, t2 = value
-        return f"PERIOD(TIMESTAMP '{t1}', TIMESTAMP '{t2}')"
-    if td_type in ("PT", "PZ"):
-        # PERIOD(TIME) → PERIOD(TIME '...', TIME '...')
-        t1, t2 = value
-        return f"PERIOD(TIME '{t1}', TIME '{t2}')"
+        if isinstance(t1, str):
+            return f"PERIOD(TIMESTAMP '{t1}', TIMESTAMP '{t2}')"
+        ts1 = t1.strftime("%Y-%m-%d %H:%M:%S")
+        ts2 = t2.strftime("%Y-%m-%d %H:%M:%S")
+        return f"PERIOD(TIMESTAMP '{ts1}', TIMESTAMP '{ts2}')"
     # INTERVAL types — value is already a literal string like "INTERVAL '1' DAY"
-    if td_type in ("SA", "SD", "SH", "SM", "SN", "DM", "DV", "FD", "FS", "FT", "FY"):
+    if td_type in ("YR", "MO", "DY", "HR", "MI", "SC", "DM", "DV", "FD", "FS", "FT", "FY"):
         return value  # already a SQL literal
     return str(value)
 

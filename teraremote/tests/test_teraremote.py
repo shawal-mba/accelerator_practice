@@ -39,15 +39,15 @@ class TestCastValue:
         assert "TIMESTAMP" in result
 
     def test_interval_passthrough(self):
-        result = _cast_value("col_int", "SD", "INTERVAL '1' DAY")
+        result = _cast_value("col_int", "DY", "INTERVAL '1' DAY")
         assert result == "INTERVAL '1' DAY"
 
     def test_period_date_cast(self):
-        result = _cast_value("col_pd", "PA", ("2024-01-01", "2024-12-31"))
+        result = _cast_value("col_pd", "PD", ("2024-01-01", "2024-12-31"))
         assert "PERIOD(DATE" in result
 
     def test_period_timestamp_cast(self):
-        result = _cast_value("col_pt", "PM", ("2024-01-01 00:00:00", "2024-12-31 23:59:59"))
+        result = _cast_value("col_pt", "PS", ("2024-01-01 00:00:00", "2024-12-31 23:59:59"))
         assert "PERIOD(TIMESTAMP" in result
 
     def test_default_str_cast(self):

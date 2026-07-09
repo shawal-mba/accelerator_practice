@@ -26,7 +26,7 @@ seed database table='' rows='100' output='':
     if [ -n "{{table}}" ]; then
         uv run python main.py read {{database}} {{table}} --limit 20
     else
-        tables=$(uv run python main.py analyze --database {{database}} 2>/dev/null | grep -oP '^\s+\K\S+' | grep test_)
+        tables=$(uv run python main.py analyze --database {{database}} 2>/dev/null | awk '/test_/{print $1}')
         for t in $tables; do
             echo "--- $t ---"
             uv run python main.py read {{database}} $t --limit 5
