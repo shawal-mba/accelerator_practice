@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from lib.matching import (
-    _ident,
     cast_td_value,
+    ident,
     match_column_bq,
     match_column_td,
 )
@@ -14,23 +14,23 @@ from lib.test_schema import BQ_TEST_TABLES, FK_MAP, SEED_ORDER, TD_TEST_TABLES, 
 
 
 class TestIdent:
-    def test_valid_identifier(self):
-        assert _ident("my_table") == "my_table"
+    def test_valididentifier(self):
+        assert ident("my_table") == "my_table"
 
     def test_valid_with_numbers(self):
-        assert _ident("table123") == "table123"
+        assert ident("table123") == "table123"
 
     def test_rejects_spaces(self):
         with pytest.raises(ValueError, match="Invalid SQL identifier"):
-            _ident("my table")
+            ident("my table")
 
     def test_rejects_special_chars(self):
         with pytest.raises(ValueError, match="Invalid SQL identifier"):
-            _ident("table; DROP TABLE x")
+            ident("table; DROP TABLE x")
 
     def test_rejects_empty(self):
         with pytest.raises(ValueError, match="Invalid SQL identifier"):
-            _ident("")
+            ident("")
 
 
 class TestMatchColumnBQ:

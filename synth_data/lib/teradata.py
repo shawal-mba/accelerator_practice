@@ -9,7 +9,8 @@ from typing import Any
 
 import teradatasql
 
-from lib.matching import INLINE_TYPES, _ident, cast_td_value, match_column_td
+from lib.fk import resolve_fk_overrides
+from lib.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
 
 logger = logging.getLogger(__name__)
 
@@ -84,13 +85,13 @@ class TeradataDB:
             return [row[0] for row in cur.fetchall()]
 
     def read_table(self, database: str, table: str, limit: int = 20) -> list[tuple]:
-        db, tbl = _ident(database), _ident(table)
+        db, tbl = ident(database), ident(table)
         with self.conn.cursor() as cur:
             cur.execute(f"SELECT * FROM {db}.{tbl} SAMPLE {limit}")
             return cur.fetchall()
 
     def read_column_values(self, database: str, table: str, column: str) -> list[Any]:
-        db, tbl, col = _ident(database), _ident(table), _ident(column)
+        db, tbl, col = ident(database), ident(table), ident(column)
         with self.conn.cursor() as cur:
             cur.execute(f"SELECT DISTINCT {col} FROM {db}.{tbl} WHERE {col} IS NOT NULL")
             return [row[0] for row in cur.fetchall()]
@@ -130,7 +131,7 @@ class TeradataDB:
         td_types = [t for _, t in columns]
         has_inline = any(t in INLINE_TYPES for t in td_types)
 
-        db, tbl = _ident(database), _ident(table)
+        db, tbl = ident(database), ident(table)
         inserted = 0
         with self.conn.cursor() as cur:
             for offset in range(0, num_rows, batch_size):
@@ -252,8 +253,8 @@ class TeradataDB:
 
         for table_id, num_rows in seed_order:
             try:
-                fk_overrides = self._resolve_fk_overrides(
-                    database, table_id, fk_map, parent_cache
+                fk_overrides = resolve_fk_overrides(
+                    self, database, table_id, fk_map, parent_cache
                 )
                 if fk_overrides is None:
                     continue
@@ -263,33 +264,12 @@ class TeradataDB:
                 results.append((table_id, 0, str(exc)))
         return results
 
-    def _resolve_fk_overrides(
-        self,
-        database: str,
-        table_id: str,
-        fk_map: dict[str, dict[str, tuple[str, str]]],
-        parent_cache: dict[tuple[str, str], list[Any]],
-    ) -> dict[str, list[Any]] | None:
-        """Resolve FK parent values. Returns None if a parent is empty."""
-        overrides: dict[str, list[Any]] = {}
-        for child_col, (parent_table, parent_col) in fk_map.get(table_id, {}).items():
-            cache_key = (parent_table, parent_col)
-            if cache_key not in parent_cache:
-                parent_cache[cache_key] = self.read_column_values(
-                    database, parent_table, parent_col
-                )
-            values = parent_cache[cache_key]
-            if not values:
-                return None
-            overrides[child_col] = values
-        return overrides
-
     # ── Schema management ────────────────────────────────────────────────────
 
     def create_schema(self, database: str) -> list[str]:
         from lib.test_schema import TD_TEST_TABLES
 
-        db = _ident(database)
+        db = ident(database)
         created: list[str] = []
         with self.conn.cursor() as cur:
             try:
@@ -317,11 +297,11 @@ class TeradataDB:
     def drop_schema(self, database: str) -> list[str]:
         from lib.test_schema import TD_TEST_TABLES
 
-        db = _ident(database)
+        db = ident(database)
         dropped: list[str] = []
         with self.conn.cursor() as cur:
             for table_name, _, _ in reversed(TD_TEST_TABLES):
-                tbl = _ident(table_name)
+                tbl = ident(table_name)
                 try:
                     cur.execute(f"DROP TABLE {db}.{tbl}")
                     dropped.append(table_name)

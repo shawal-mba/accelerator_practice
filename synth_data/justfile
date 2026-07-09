@@ -9,6 +9,16 @@ cli := "uv run synth-data"
 default:
     @just --list
 
+# ── Stats ────────────────────────────────────────────────────────────────────
+
+words:
+    @echo "Lines of code per Python file:"
+    @echo ""
+    @wc -l *.py lib/*.py tests/*.py 2>/dev/null | grep -v total | sort -rn | awk '{printf "  %6d  %s\n", $1, $2}'
+    @echo ""
+    @echo "Total:"
+    @wc -l *.py lib/*.py tests/*.py 2>/dev/null | tail -1 | awk '{printf "  %6d  %s\n", $1, $2}'
+
 # ── Quality ──────────────────────────────────────────────────────────────────
 
 lint:

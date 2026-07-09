@@ -10,6 +10,7 @@ from typing import Any
 from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import bigquery
 
+from lib.fk import resolve_fk_overrides
 from lib.matching import match_column_bq
 
 logger = logging.getLogger(__name__)
@@ -195,8 +196,8 @@ class BigQueryDB:
 
         for table_id, num_rows in seed_order:
             try:
-                fk_overrides = self._resolve_fk_overrides(
-                    database, table_id, fk_map, parent_cache
+                fk_overrides = resolve_fk_overrides(
+                    self, database, table_id, fk_map, parent_cache
                 )
                 if fk_overrides is None:
                     continue  # parent empty — skip
@@ -205,27 +206,6 @@ class BigQueryDB:
                 logger.warning("Failed to seed %s: %s", table_id, exc)
                 results.append((table_id, 0, str(exc)))
         return results
-
-    def _resolve_fk_overrides(
-        self,
-        database: str,
-        table_id: str,
-        fk_map: dict[str, dict[str, tuple[str, str]]],
-        parent_cache: dict[tuple[str, str], list[Any]],
-    ) -> dict[str, list[Any]] | None:
-        """Resolve FK parent values. Returns None if a parent is empty."""
-        overrides: dict[str, list[Any]] = {}
-        for child_col, (parent_table, parent_col) in fk_map.get(table_id, {}).items():
-            cache_key = (parent_table, parent_col)
-            if cache_key not in parent_cache:
-                parent_cache[cache_key] = self.read_column_values(
-                    database, parent_table, parent_col
-                )
-            values = parent_cache[cache_key]
-            if not values:
-                return None
-            overrides[child_col] = values
-        return overrides
 
     # ── Schema management ────────────────────────────────────────────────────
 

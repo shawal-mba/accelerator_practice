@@ -15,7 +15,7 @@ fake = Faker("zu_ZA")
 _IDENT_RE = re.compile(r"^[a-zA-Z0-9_]+$")
 
 
-def _ident(name: str) -> str:
+def ident(name: str) -> str:
     """Validate and return a SQL-safe identifier."""
     if not _IDENT_RE.match(name):
         raise ValueError(f"Invalid SQL identifier: {name!r}")
