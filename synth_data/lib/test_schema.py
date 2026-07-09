@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
-from google.cloud import bigquery
+from typing import Any, TypedDict
+
+
+class BQColumnDict(TypedDict, total=False):
+    name: str
+    type: str
+    mode: str
+    fields: list[BQColumnDict]
+    description: str
+
+
+class BQTableDef(TypedDict):
+    name: str
+    columns: list[BQColumnDict]
+    description: str
+
 
 # ── BigQuery test tables ─────────────────────────────────────────────────────
 
-BQ_TEST_TABLES: list[tuple[str, list[dict], str]] = [
-    (
-        "test_types_scalar",
-        [
+BQ_TEST_TABLES: list[BQTableDef] = [
+    {
+        "name": "test_types_scalar",
+        "columns": [
             {"name": "id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "col_string", "type": "STRING", "mode": "NULLABLE"},
             {"name": "col_bytes", "type": "BYTES", "mode": "NULLABLE"},
@@ -24,21 +39,21 @@ BQ_TEST_TABLES: list[tuple[str, list[dict], str]] = [
             {"name": "col_time", "type": "TIME", "mode": "NULLABLE"},
             {"name": "col_json", "type": "JSON", "mode": "NULLABLE"},
         ],
-        "Exercises every scalar BigQuery type.",
-    ),
-    (
-        "test_types_repeated",
-        [
+        "description": "Exercises every scalar BigQuery type.",
+    },
+    {
+        "name": "test_types_repeated",
+        "columns": [
             {"name": "id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "tags", "type": "STRING", "mode": "REPEATED"},
             {"name": "scores", "type": "FLOAT64", "mode": "REPEATED"},
             {"name": "flags", "type": "BOOLEAN", "mode": "REPEATED"},
         ],
-        "Exercises REPEATED (array) columns.",
-    ),
-    (
-        "test_types_struct",
-        [
+        "description": "Exercises REPEATED (array) columns.",
+    },
+    {
+        "name": "test_types_struct",
+        "columns": [
             {"name": "id", "type": "INTEGER", "mode": "REQUIRED"},
             {
                 "name": "address",
@@ -51,30 +66,30 @@ BQ_TEST_TABLES: list[tuple[str, list[dict], str]] = [
                 ],
             },
         ],
-        "Exercises RECORD (struct) columns.",
-    ),
-    (
-        "test_types_geography",
-        [
+        "description": "Exercises RECORD (struct) columns.",
+    },
+    {
+        "name": "test_types_geography",
+        "columns": [
             {"name": "id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "location", "type": "GEOGRAPHY", "mode": "NULLABLE"},
         ],
-        "Exercises GEOGRAPHY type.",
-    ),
-    (
-        "test_products",
-        [
+        "description": "Exercises GEOGRAPHY type.",
+    },
+    {
+        "name": "test_products",
+        "columns": [
             {"name": "product_id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "product_name", "type": "STRING", "mode": "REQUIRED"},
             {"name": "category", "type": "STRING", "mode": "NULLABLE"},
             {"name": "price", "type": "NUMERIC", "mode": "NULLABLE"},
             {"name": "in_stock", "type": "BOOLEAN", "mode": "NULLABLE"},
         ],
-        "Parent table for FK tests.",
-    ),
-    (
-        "test_customers",
-        [
+        "description": "Parent table for FK tests.",
+    },
+    {
+        "name": "test_customers",
+        "columns": [
             {"name": "customer_id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "first_name", "type": "STRING", "mode": "REQUIRED"},
             {"name": "last_name", "type": "STRING", "mode": "REQUIRED"},
@@ -82,33 +97,33 @@ BQ_TEST_TABLES: list[tuple[str, list[dict], str]] = [
             {"name": "phone", "type": "STRING", "mode": "NULLABLE"},
             {"name": "signup_date", "type": "DATE", "mode": "NULLABLE"},
         ],
-        "Parent table for FK tests.",
-    ),
-    (
-        "test_orders",
-        [
+        "description": "Parent table for FK tests.",
+    },
+    {
+        "name": "test_orders",
+        "columns": [
             {"name": "order_id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "customer_id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "order_date", "type": "DATE", "mode": "NULLABLE"},
             {"name": "total_amount", "type": "NUMERIC", "mode": "NULLABLE"},
             {"name": "status", "type": "STRING", "mode": "NULLABLE"},
         ],
-        "Child of test_customers.",
-    ),
-    (
-        "test_order_items",
-        [
+        "description": "Child of test_customers.",
+    },
+    {
+        "name": "test_order_items",
+        "columns": [
             {"name": "item_id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "order_id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "product_id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "quantity", "type": "INTEGER", "mode": "NULLABLE"},
             {"name": "unit_price", "type": "NUMERIC", "mode": "NULLABLE"},
         ],
-        "Child of test_orders + test_products.",
-    ),
-    (
-        "test_nullable",
-        [
+        "description": "Child of test_orders + test_products.",
+    },
+    {
+        "name": "test_nullable",
+        "columns": [
             {"name": "id", "type": "INTEGER", "mode": "REQUIRED"},
             {"name": "opt_string", "type": "STRING", "mode": "NULLABLE"},
             {"name": "opt_int", "type": "INTEGER", "mode": "NULLABLE"},
@@ -116,14 +131,16 @@ BQ_TEST_TABLES: list[tuple[str, list[dict], str]] = [
             {"name": "opt_date", "type": "DATE", "mode": "NULLABLE"},
             {"name": "opt_bool", "type": "BOOLEAN", "mode": "NULLABLE"},
         ],
-        "All columns nullable — tests NULL generation.",
-    ),
-    (
-        "test_wide",
-        [{"name": f"col_{i:03d}", "type": "STRING", "mode": "NULLABLE"} for i in range(50)]
-        + [{"name": "id", "type": "INTEGER", "mode": "REQUIRED"}],
-        "50 string columns — stress-tests wide inserts.",
-    ),
+        "description": "All columns nullable — tests NULL generation.",
+    },
+    {
+        "name": "test_wide",
+        "columns": [
+            BQColumnDict(name=f"col_{i:03d}", type="STRING", mode="NULLABLE") for i in range(50)
+        ]
+        + [BQColumnDict(name="id", type="INTEGER", mode="REQUIRED")],
+        "description": "50 string columns — stress-tests wide inserts.",
+    },
 ]
 
 # ── Teradata test tables ─────────────────────────────────────────────────────
@@ -294,11 +311,13 @@ FK_MAP: dict[str, dict[str, tuple[str, str]]] = {
 }
 
 
-def _make_schema_field(f: dict) -> bigquery.SchemaField:
+def _make_schema_field(f: Any) -> Any:
     """Convert a dict to a BigQuery SchemaField."""
-    f = dict(f)
-    if "type" in f:
-        f["field_type"] = f.pop("type")
-    if "fields" in f:
-        f["fields"] = [_make_schema_field(sub) for sub in f["fields"]]
-    return bigquery.SchemaField(**f)
+    from google.cloud import bigquery
+
+    d = dict(f)
+    if "type" in d:
+        d["field_type"] = d.pop("type")
+    if "fields" in d:
+        d["fields"] = [_make_schema_field(sub) for sub in d["fields"]]
+    return bigquery.SchemaField(**d)

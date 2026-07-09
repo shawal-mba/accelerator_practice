@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import random
+from collections.abc import Sequence
 from typing import Any
 
 from google.api_core.exceptions import GoogleAPIError, NotFound
@@ -20,6 +21,13 @@ class BigQueryDB:
     def __init__(self, project: str | None = None) -> None:
         self._project = project
         self._client: bigquery.Client | None = None
+
+    def __enter__(self) -> BigQueryDB:
+        self.connect()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()
 
     def connect(self) -> None:
         self._client = bigquery.Client(project=self._project)
@@ -42,47 +50,46 @@ class BigQueryDB:
     def list_databases(self) -> list[str]:
         return sorted(ds.dataset_id for ds in self.client.list_datasets())
 
-    def list_tables(self, dataset: str) -> list[dict[str, str]]:
+    def list_tables(self, database: str) -> list[dict[str, str]]:
         tables = []
-        for table in self.client.list_tables(f"{self.project}.{dataset}"):
+        for table in self.client.list_tables(f"{self.project}.{database}"):
             tables.append({"table_name": table.table_id, "table_type": table.table_type})
         return sorted(tables, key=lambda t: t["table_name"])
 
-    def get_columns(self, dataset: str, table: str) -> list[tuple[str, str, bool]]:
-        table_ref = self.client.get_table(f"{self.project}.{dataset}.{table}")
+    def get_columns(self, database: str, table: str) -> Sequence[tuple[Any, ...]]:
+        table_ref = self.client.get_table(f"{self.project}.{database}.{table}")
         return [
-            (field.name, field.field_type, field.mode == "REPEATED")
-            for field in table_ref.schema
+            (field.name, field.field_type, field.mode == "REPEATED") for field in table_ref.schema
         ]
 
-    def get_column_names(self, dataset: str, table: str) -> list[str]:
-        table_ref = self.client.get_table(f"{self.project}.{dataset}.{table}")
+    def get_column_names(self, database: str, table: str) -> list[str]:
+        table_ref = self.client.get_table(f"{self.project}.{database}.{table}")
         return [field.name for field in table_ref.schema]
 
-    def read_table(self, dataset: str, table: str, limit: int = 20) -> list[tuple]:
-        query = f"SELECT * FROM `{self.project}.{dataset}.{table}` LIMIT {limit}"
+    def read_table(self, database: str, table: str, limit: int = 20) -> list[tuple]:
+        query = f"SELECT * FROM `{self.project}.{database}.{table}` LIMIT {limit}"
         return [tuple(row.values()) for row in self.client.query(query).result()]
 
-    def read_column_values(self, dataset: str, table: str, column: str) -> list[Any]:
+    def read_column_values(self, database: str, table: str, column: str) -> list[Any]:
         query = (
-            f"SELECT DISTINCT `{column}` FROM `{self.project}.{dataset}.{table}` "
+            f"SELECT DISTINCT `{column}` FROM `{self.project}.{database}.{table}` "
             f"WHERE `{column}` IS NOT NULL"
         )
         return [row[column] for row in self.client.query(query).result()]
 
     def insert_fake_rows(
         self,
-        dataset: str,
+        database: str,
         table: str,
-        columns: list[tuple[str, str, bool]],
+        columns: Sequence[tuple[Any, ...]],
         num_rows: int = 100,
         batch_size: int = 50,
         fk_overrides: dict[str, list[Any]] | None = None,
     ) -> int:
         if not columns:
-            raise ValueError(f"Table {dataset}.{table} has no columns")
+            raise ValueError(f"Table {database}.{table} has no columns")
 
-        table_ref = self.client.get_table(f"{self.project}.{dataset}.{table}")
+        table_ref = self.client.get_table(f"{self.project}.{database}.{table}")
 
         record_gens: dict[str, list[tuple[str, Any]]] = {}
         for field in table_ref.schema:
@@ -122,8 +129,8 @@ class BigQueryDB:
             inserted += batch
         return inserted
 
-    def seed_all(self, dataset: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
-        tables = self.list_tables(dataset)
+    def seed_all(self, database: str, num_rows: int = 100) -> list[tuple[str, int, str]]:
+        tables = self.list_tables(database)
         results: list[tuple[str, int, str]] = []
         for t in tables:
             name = t["table_name"]
@@ -131,11 +138,11 @@ class BigQueryDB:
                 results.append((name, 0, f"skipped ({t['table_type']})"))
                 continue
             try:
-                columns = self.get_columns(dataset, name)
+                columns = self.get_columns(database, name)
                 if not columns:
                     results.append((name, 0, "no columns found"))
                     continue
-                inserted = self.insert_fake_rows(dataset, name, columns, num_rows)
+                inserted = self.insert_fake_rows(database, name, columns, num_rows)
                 results.append((name, inserted, "ok"))
             except (ValueError, RuntimeError) as exc:
                 logger.warning("Failed to seed %s: %s", name, exc)
@@ -144,7 +151,7 @@ class BigQueryDB:
 
     def seed_with_relations(
         self,
-        dataset: str,
+        database: str,
         seed_order: list[tuple[str, int]],
         fk_map: dict[str, dict[str, tuple[str, str]]],
     ) -> list[tuple[str, int, str]]:
@@ -153,7 +160,7 @@ class BigQueryDB:
 
         for table_id, num_rows in seed_order:
             try:
-                columns = self.get_columns(dataset, table_id)
+                columns = self.get_columns(database, table_id)
                 if not columns:
                     results.append((table_id, 0, "no columns found"))
                     continue
@@ -165,7 +172,7 @@ class BigQueryDB:
                     cache_key = (parent_table, parent_col)
                     if cache_key not in parent_cache:
                         parent_cache[cache_key] = self.read_column_values(
-                            dataset, parent_table, parent_col
+                            database, parent_table, parent_col
                         )
                     values = parent_cache[cache_key]
                     if not values:
@@ -179,7 +186,7 @@ class BigQueryDB:
                     continue
 
                 inserted = self.insert_fake_rows(
-                    dataset, table_id, columns, num_rows, fk_overrides=fk_overrides
+                    database, table_id, columns, num_rows, fk_overrides=fk_overrides
                 )
                 results.append((table_id, inserted, "ok"))
             except (ValueError, RuntimeError) as exc:
@@ -187,12 +194,15 @@ class BigQueryDB:
                 results.append((table_id, 0, str(exc)))
         return results
 
-    def create_schema(self, dataset: str) -> list[str]:
+    def create_schema(self, database: str) -> list[str]:
         from lib.test_schema import BQ_TEST_TABLES, _make_schema_field
 
         created: list[str] = []
-        for table_id, schema_fields, description in BQ_TEST_TABLES:
-            full_id = f"{self.project}.{dataset}.{table_id}"
+        for t in BQ_TEST_TABLES:
+            table_id = t["name"]
+            schema_fields = t["columns"]
+            description = t["description"]
+            full_id = f"{self.project}.{database}.{table_id}"
             schema = [_make_schema_field(f) for f in schema_fields]
             table = bigquery.Table(full_id, schema=schema)
             table.description = description
@@ -201,12 +211,12 @@ class BigQueryDB:
             logger.info("Created %s (%d columns)", table_id, len(schema))
         return created
 
-    def drop_schema(self, dataset: str) -> list[str]:
+    def drop_schema(self, database: str) -> list[str]:
         from lib.test_schema import BQ_TEST_TABLES
 
         dropped: list[str] = []
         for table_id, _, _ in BQ_TEST_TABLES:
-            full_id = f"{self.project}.{dataset}.{table_id}"
+            full_id = f"{self.project}.{database}.{table_id}"
             try:
                 self.client.delete_table(full_id, not_found_ok=True)
                 dropped.append(table_id)

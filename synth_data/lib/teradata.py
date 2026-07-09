@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import logging
 import random
+from collections.abc import Sequence
 from typing import Any
 
 import teradatasql
 
-from lib.common import INLINE_TYPES, cast_td_value, match_column_td
+from lib.common import INLINE_TYPES, _ident, cast_td_value, match_column_td
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,13 @@ class TeradataDB:
         self._user = user
         self._password = password
         self._conn: teradatasql.TeradataConnection | None = None
+
+    def __enter__(self) -> TeradataDB:
+        self.connect()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()
 
     def connect(self) -> None:
         self._conn = teradatasql.connect(
@@ -55,55 +63,58 @@ class TeradataDB:
             )
             return [{"table_name": row[0], "table_kind": row[1].strip()} for row in cur.fetchall()]
 
-    def get_columns(self, database: str, table_name: str) -> list[tuple[str, str]]:
+    def get_columns(self, database: str, table: str) -> Sequence[tuple[Any, ...]]:
         with self.conn.cursor() as cur:
             cur.execute(
                 "SELECT ColumnName, ColumnType FROM DBC.ColumnsV "
                 "WHERE DatabaseName = ? AND TableName = ? ORDER BY ColumnId",
-                [database, table_name],
+                [database, table],
             )
             return [(row[0], row[1].strip()) for row in cur.fetchall()]
 
-    def get_column_names(self, database: str, table_name: str) -> list[str]:
+    def get_column_names(self, database: str, table: str) -> list[str]:
         with self.conn.cursor() as cur:
             cur.execute(
                 "SELECT ColumnName FROM DBC.ColumnsV "
                 "WHERE DatabaseName = ? AND TableName = ? ORDER BY ColumnId",
-                [database, table_name],
+                [database, table],
             )
             return [row[0] for row in cur.fetchall()]
 
-    def read_table(self, database: str, table_name: str, limit: int = 20) -> list[tuple]:
+    def read_table(self, database: str, table: str, limit: int = 20) -> list[tuple]:
+        db = _ident(database)
+        tbl = _ident(table)
         with self.conn.cursor() as cur:
-            cur.execute(f"SELECT * FROM {database}.{table_name} SAMPLE {limit}")
+            cur.execute(f"SELECT * FROM {db}.{tbl} SAMPLE {limit}")
             return cur.fetchall()
 
     def read_column_values(self, database: str, table: str, column: str) -> list[Any]:
+        db = _ident(database)
+        tbl = _ident(table)
+        col = _ident(column)
         with self.conn.cursor() as cur:
-            sql = (
-                f"SELECT DISTINCT {column} FROM {database}.{table}"
-                f" WHERE {column} IS NOT NULL"
-            )
-            cur.execute(sql)
+            cur.execute(f"SELECT DISTINCT {col} FROM {db}.{tbl} WHERE {col} IS NOT NULL")
             return [row[0] for row in cur.fetchall()]
 
     def insert_fake_rows(
         self,
         database: str,
-        table_name: str,
-        columns: list[tuple[str, str]],
+        table: str,
+        columns: Sequence[tuple[Any, ...]],
         num_rows: int = 100,
         batch_size: int = 50,
         fk_overrides: dict[str, list[Any]] | None = None,
     ) -> int:
         if not columns:
-            raise ValueError(f"Table {database}.{table_name} has no columns")
+            raise ValueError(f"Table {database}.{table} has no columns")
 
         generators = [match_column_td(name, td_type) for name, td_type in columns]
         col_name_list = [name for name, _ in columns]
         td_types = [td_type for _, td_type in columns]
         has_inline = any(t in INLINE_TYPES for t in td_types)
 
+        db = _ident(database)
+        tbl = _ident(table)
         inserted = 0
         with self.conn.cursor() as cur:
             for offset in range(0, num_rows, batch_size):
@@ -133,7 +144,7 @@ class TeradataDB:
                                 param_values.append(val)
 
                         sql = (
-                            f"INSERT INTO {database}.{table_name} "
+                            f"INSERT INTO {db}.{tbl} "
                             f"({', '.join(col_name_list)}) "
                             f"VALUES ({', '.join(parts)})"
                         )
@@ -142,10 +153,7 @@ class TeradataDB:
                 else:
                     col_names_str = ", ".join(col_name_list)
                     placeholders = ", ".join("?" for _ in columns)
-                    sql = (
-                        f"INSERT INTO {database}.{table_name} "
-                        f"({col_names_str}) VALUES ({placeholders})"
-                    )
+                    sql = f"INSERT INTO {db}.{tbl} ({col_names_str}) VALUES ({placeholders})"
                     rows = []
                     for _ in range(batch):
                         row = []
@@ -175,7 +183,7 @@ class TeradataDB:
                     continue
                 inserted = self.insert_fake_rows(database, name, columns, num_rows)
                 results.append((name, inserted, "ok"))
-            except (ValueError, RuntimeError) as exc:
+            except (ValueError, RuntimeError, teradatasql.DatabaseError) as exc:
                 logger.warning("Failed to seed %s: %s", name, exc)
                 results.append((name, 0, str(exc)))
         return results
@@ -220,7 +228,7 @@ class TeradataDB:
                     database, table_id, columns, num_rows, fk_overrides=fk_overrides
                 )
                 results.append((table_id, inserted, "ok"))
-            except (ValueError, RuntimeError) as exc:
+            except (ValueError, RuntimeError, teradatasql.DatabaseError) as exc:
                 logger.warning("Failed to seed %s: %s", table_id, exc)
                 results.append((table_id, 0, str(exc)))
         return results
@@ -228,42 +236,44 @@ class TeradataDB:
     def create_schema(self, database: str) -> list[str]:
         from lib.test_schema import TD_TEST_TABLES
 
+        db = _ident(database)
         created: list[str] = []
         with self.conn.cursor() as cur:
             try:
-                cur.execute(f"CREATE DATABASE {database} AS PERMANENT = 1e8, SPOOL = 1e8")
+                cur.execute(f"CREATE DATABASE {db} AS PERMANENT = 1e8, SPOOL = 1e8")
                 logger.info("Created database %s", database)
-            except Exception as exc:
-                if "already exists" in str(exc).lower():
-                    logger.info("Database %s already exists", database)
-                else:
+            except teradatasql.DatabaseError as exc:
+                if "already exists" not in str(exc).lower():
                     logger.error("Error creating database %s: %s", database, exc)
                     return created
+                logger.info("Database %s already exists", database)
 
             for table_name, ddl, _ in TD_TEST_TABLES:
                 try:
-                    cur.execute(ddl.format(db=database))
+                    cur.execute(ddl.format(db=db))
                     created.append(table_name)
                     logger.info("Created %s", table_name)
-                except Exception as exc:
-                    if "already exists" in str(exc).lower():
+                except teradatasql.DatabaseError as exc:
+                    if "already exists" not in str(exc).lower():
+                        logger.error("Error creating %s: %s", table_name, exc)
+                    else:
                         created.append(table_name)
                         logger.info("%s already exists", table_name)
-                    else:
-                        logger.error("Error creating %s: %s", table_name, exc)
         return created
 
     def drop_schema(self, database: str) -> list[str]:
         from lib.test_schema import TD_TEST_TABLES
 
+        db = _ident(database)
         dropped: list[str] = []
         with self.conn.cursor() as cur:
             for table_name, _, _ in reversed(TD_TEST_TABLES):
+                tbl = _ident(table_name)
                 try:
-                    cur.execute(f"DROP TABLE {database}.{table_name}")
+                    cur.execute(f"DROP TABLE {db}.{tbl}")
                     dropped.append(table_name)
                     logger.info("Dropped %s", table_name)
-                except Exception as exc:
+                except teradatasql.DatabaseError as exc:
                     if "does not exist" not in str(exc).lower():
                         logger.error("Error dropping %s: %s", table_name, exc)
         return dropped

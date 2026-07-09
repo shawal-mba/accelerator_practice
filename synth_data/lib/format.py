@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 
 from rich.console import Console
 from rich.table import Table
@@ -94,7 +95,7 @@ def table_list(database: str, tables: list[dict[str, str]], kind_key: str = "tab
 def column_list(
     database: str,
     table: str,
-    columns: list[tuple],
+    columns: Sequence[tuple],
     engine: str = "bigquery",
 ) -> None:
     t = Table(
@@ -146,13 +147,6 @@ def data_table(col_names: list[str], rows: list[tuple], max_width: int = 40) -> 
     for row in rows:
         table.add_row(*(str(v) if v is not None else "[dim]NULL[/dim]" for v in row))
     console.print(table)
-
-
-def summary(total_tables: int, total_rows: int) -> None:
-    console.print(
-        f"\n[bold]Summary:[/bold] {total_tables} tables processed, {total_rows} total rows",
-        style=STYLE_HIGHLIGHT,
-    )
 
 
 def created(count: int) -> None:

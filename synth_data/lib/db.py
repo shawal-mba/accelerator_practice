@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any, Protocol, runtime_checkable
 
 
@@ -13,11 +14,15 @@ class Database(Protocol):
 
     def close(self) -> None: ...
 
+    def __enter__(self) -> Database: ...
+
+    def __exit__(self, *args: Any) -> None: ...
+
     def list_databases(self) -> list[str]: ...
 
     def list_tables(self, database: str) -> list[dict[str, str]]: ...
 
-    def get_columns(self, database: str, table: str) -> list[tuple[str, Any]]: ...
+    def get_columns(self, database: str, table: str) -> Sequence[tuple[Any, ...]]: ...
 
     def get_column_names(self, database: str, table: str) -> list[str]: ...
 
@@ -29,7 +34,7 @@ class Database(Protocol):
         self,
         database: str,
         table: str,
-        columns: list[tuple[str, Any]],
+        columns: Sequence[tuple[Any, ...]],
         num_rows: int = 100,
         batch_size: int = 50,
         fk_overrides: dict[str, list[Any]] | None = None,

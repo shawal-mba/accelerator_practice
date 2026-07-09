@@ -61,28 +61,22 @@ def _get_db(args: argparse.Namespace) -> Database:
         project = args.project or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
         if not project:
             raise ConfigError(
-                "project is required for BigQuery. "
-                "Pass --project or set GOOGLE_CLOUD_PROJECT."
+                "project is required for BigQuery. Pass --project or set GOOGLE_CLOUD_PROJECT."
             )
         db: Database = BigQueryDB(project=project)
     elif engine == "teradata":
         host = args.host or os.environ.get("TERADATA_HOST", "")
         user = args.user or os.environ.get("TERADATA_USER", "")
-        password = args.password or os.environ.get("TERADATA_PASSWORD", "")
+        password = os.environ.get("TERADATA_PASSWORD", "")
         if not all([host, user, password]):
             raise ConfigError(
                 "host, user, and password are required for Teradata. "
-                "Pass as arguments or set TERADATA_HOST / TERADATA_USER / TERADATA_PASSWORD."
+                "Set TERADATA_HOST / TERADATA_USER / TERADATA_PASSWORD."
             )
         db = TeradataDB(host=host, user=user, password=password)
     else:
         raise ConfigError(f"Unknown engine: {engine}")
     return db
-
-
-def _resolve_database(args: argparse.Namespace) -> str:
-    """Return the database/dataset name — BigQuery uses 'dataset', Teradata uses 'database'."""
-    return args.database or getattr(args, "dataset", None) or ""
 
 
 def _build_seed_report(
@@ -110,10 +104,9 @@ def _build_seed_report(
 
 def cmd_analyze(args: argparse.Namespace) -> None:
     db = _get_db(args)
-    db.connect()
-    try:
+    with db:
         databases = db.list_databases()
-        database = _resolve_database(args)
+        database = args.database or ""
         if database:
             tables = db.list_tables(database)
             kind_key = "table_type" if args.engine == "bigquery" else "table_kind"
@@ -122,15 +115,12 @@ def cmd_analyze(args: argparse.Namespace) -> None:
             dataset_list(databases)
         else:
             database_list(databases)
-    finally:
-        db.close()
 
 
 def cmd_seed(args: argparse.Namespace) -> None:
     db = _get_db(args)
-    db.connect()
-    try:
-        database = _resolve_database(args)
+    with db:
+        database = args.database
         if args.table:
             columns = db.get_columns(database, args.table)
             if not columns:
@@ -157,63 +147,45 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 with open(args.output, "w") as f:
                     f.write(report)
                 dim(f"\nReport written to {args.output}")
-    finally:
-        db.close()
 
 
 def cmd_read(args: argparse.Namespace) -> None:
     db = _get_db(args)
-    db.connect()
-    try:
-        database = _resolve_database(args)
-        col_names = db.get_column_names(database, args.table)
-        rows = db.read_table(database, args.table, limit=args.limit)
+    with db:
+        col_names = db.get_column_names(args.database, args.table)
+        rows = db.read_table(args.database, args.table, limit=args.limit)
         data_table(col_names, rows)
         dim(f"({len(rows)} rows)")
-    finally:
-        db.close()
 
 
 def cmd_create_schema(args: argparse.Namespace) -> None:
     db = _get_db(args)
-    db.connect()
-    try:
-        database = _resolve_database(args)
-        heading(f"Creating test tables in {database}")
-        created_tables = db.create_schema(database)
+    with db:
+        heading(f"Creating test tables in {args.database}")
+        created_tables = db.create_schema(args.database)
         created(len(created_tables))
-    finally:
-        db.close()
 
 
 def cmd_drop_schema(args: argparse.Namespace) -> None:
     db = _get_db(args)
-    db.connect()
-    try:
-        database = _resolve_database(args)
-        heading(f"Dropping test tables in {database}")
-        dropped_tables = db.drop_schema(database)
+    with db:
+        heading(f"Dropping test tables in {args.database}")
+        dropped_tables = db.drop_schema(args.database)
         dropped(len(dropped_tables))
-    finally:
-        db.close()
 
 
 def cmd_seed_test(args: argparse.Namespace) -> None:
     db = _get_db(args)
-    db.connect()
-    try:
-        database = _resolve_database(args)
-        heading(f"Seeding test tables in {database} with referential integrity")
-        results = db.seed_with_relations(database, SEED_ORDER, FK_MAP)
+    with db:
+        heading(f"Seeding test tables in {args.database} with referential integrity")
+        results = db.seed_with_relations(args.database, SEED_ORDER, FK_MAP)
         seed_result_table(results)
 
-        report = _build_seed_report(db, database, results, args.engine)
+        report = _build_seed_report(db, args.database, results, args.engine)
         if args.output:
             with open(args.output, "w") as f:
                 f.write(report)
             dim(f"\nReport written to {args.output}")
-    finally:
-        db.close()
 
 
 def main() -> None:
@@ -222,7 +194,9 @@ def main() -> None:
         description="Unified CLI for Teradata and BigQuery: analyse, seed, and test schemas.",
     )
     parser.add_argument(
-        "--engine", choices=["bigquery", "teradata"], required=True,
+        "--engine",
+        choices=["bigquery", "teradata"],
+        required=True,
         help="Database engine to use",
     )
     parser.add_argument(
@@ -231,7 +205,6 @@ def main() -> None:
     )
     parser.add_argument("--host", help="Teradata host (or env TERADATA_HOST)")
     parser.add_argument("--user", help="Teradata user (or env TERADATA_USER)")
-    parser.add_argument("--password", help="Teradata password (or env TERADATA_PASSWORD)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
 
     sub = parser.add_subparsers(dest="command")
@@ -278,23 +251,24 @@ def main() -> None:
     args = parser.parse_args()
     _setup_logging(args.verbose)
 
-    if hasattr(args, "func"):
-        try:
-            args.func(args)
-        except ConfigError as exc:
-            error(f"Configuration error: {exc}")
-            sys.exit(1)
-        except TableError as exc:
-            error(f"Table error: {exc}")
-            sys.exit(1)
-        except SynthDataError as exc:
-            error(f"Error: {exc}")
-            sys.exit(1)
-        except KeyboardInterrupt:
-            dim("\nInterrupted.")
-            sys.exit(130)
-    else:
+    if not hasattr(args, "func"):
         parser.print_help()
+        return
+
+    try:
+        args.func(args)
+    except ConfigError as exc:
+        error(f"Configuration error: {exc}")
+        sys.exit(1)
+    except TableError as exc:
+        error(f"Table error: {exc}")
+        sys.exit(1)
+    except SynthDataError as exc:
+        error(f"Error: {exc}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        dim("\nInterrupted.")
+        sys.exit(130)
 
 
 if __name__ == "__main__":

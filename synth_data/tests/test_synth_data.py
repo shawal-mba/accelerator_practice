@@ -2,12 +2,35 @@
 
 from __future__ import annotations
 
+import pytest
+
 from lib.common import (
+    _ident,
     cast_td_value,
     match_column_bq,
     match_column_td,
 )
 from lib.test_schema import BQ_TEST_TABLES, FK_MAP, SEED_ORDER, TD_TEST_TABLES, _make_schema_field
+
+
+class TestIdent:
+    def test_valid_identifier(self):
+        assert _ident("my_table") == "my_table"
+
+    def test_valid_with_numbers(self):
+        assert _ident("table123") == "table123"
+
+    def test_rejects_spaces(self):
+        with pytest.raises(ValueError, match="Invalid SQL identifier"):
+            _ident("my table")
+
+    def test_rejects_special_chars(self):
+        with pytest.raises(ValueError, match="Invalid SQL identifier"):
+            _ident("table; DROP TABLE x")
+
+    def test_rejects_empty(self):
+        with pytest.raises(ValueError, match="Invalid SQL identifier"):
+            _ident("")
 
 
 class TestMatchColumnBQ:
@@ -88,6 +111,14 @@ class TestCastTdValue:
         result = cast_td_value("col_var", "CV", "hello")
         assert result == "hello"
 
+    def test_pd_rejects_wrong_type(self):
+        with pytest.raises(ValueError, match="PD value must be a 2-tuple"):
+            cast_td_value("col", "PD", "not-a-tuple")
+
+    def test_ps_rejects_wrong_type(self):
+        with pytest.raises(ValueError, match="PS value must be a 2-tuple"):
+            cast_td_value("col", "PS", [1, 2])
+
 
 class TestMakeSchemaField:
     def test_basic_field(self):
@@ -115,13 +146,12 @@ class TestMakeSchemaField:
 
 class TestBqSchema:
     def test_seed_order_has_all_tables(self):
-        bq_ids = {t[0] for t in BQ_TEST_TABLES}
+        bq_ids = {t["name"] for t in BQ_TEST_TABLES}
         order_ids = {name for name, _ in SEED_ORDER}
-        # All BigQuery tables should appear in seed order
         assert bq_ids <= order_ids
 
     def test_fk_map_points_to_valid_tables(self):
-        table_ids = {t[0] for t in BQ_TEST_TABLES}
+        table_ids = {t["name"] for t in BQ_TEST_TABLES}
         for child, fks in FK_MAP.items():
             assert child in table_ids
             for _child_col, (parent_table, _parent_col) in fks.items():
@@ -138,7 +168,6 @@ class TestTdSchema:
     def test_seed_order_covers_all_td_tables(self):
         td_names = {t[0] for t in TD_TEST_TABLES}
         order_names = {name for name, _ in SEED_ORDER}
-        # All Teradata tables should appear in seed order
         assert td_names <= order_names
 
     def test_fk_map_points_to_valid_tables(self):

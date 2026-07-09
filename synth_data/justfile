@@ -4,6 +4,8 @@ set dotenv-load
 
 gcp_project := "adg-internal-tech-sandbox"
 
+cli := "uv run synth-data"
+
 default:
     @just --list
 
@@ -24,42 +26,54 @@ typecheck:
 test:
     uv run pytest
 
+check: lint typecheck test
+
+all: format check
+
+# ── Build ────────────────────────────────────────────────────────────────────
+
+install:
+    uv sync
+
+build:
+    uv build
+
 # ── BigQuery commands ────────────────────────────────────────────────────────
 
 analyze-bq *ARGS:
-    uv run python main.py --engine bigquery --project {{ gcp_project }} analyze {{ ARGS }}
+    {{ cli }} --engine bigquery --project {{ gcp_project }} analyze {{ ARGS }}
 
 seed-bq dataset table rows:
-    uv run python main.py --engine bigquery --project {{ gcp_project }} seed {{ dataset }} {{ table }} --rows {{ rows }}
+    {{ cli }} --engine bigquery --project {{ gcp_project }} seed {{ dataset }} {{ table }} --rows {{ rows }}
 
 read-bq dataset table limit:
-    uv run python main.py --engine bigquery --project {{ gcp_project }} read {{ dataset }} {{ table }} --limit {{ limit }}
+    {{ cli }} --engine bigquery --project {{ gcp_project }} read {{ dataset }} {{ table }} --limit {{ limit }}
 
 create-schema-bq dataset:
-    uv run python main.py --engine bigquery --project {{ gcp_project }} create-schema {{ dataset }}
+    {{ cli }} --engine bigquery --project {{ gcp_project }} create-schema {{ dataset }}
 
 drop-schema-bq dataset:
-    uv run python main.py --engine bigquery --project {{ gcp_project }} drop-schema {{ dataset }}
+    {{ cli }} --engine bigquery --project {{ gcp_project }} drop-schema {{ dataset }}
 
 seed-test-bq dataset:
-    uv run python main.py --engine bigquery --project {{ gcp_project }} seed-test {{ dataset }}
+    {{ cli }} --engine bigquery --project {{ gcp_project }} seed-test {{ dataset }}
 
 # ── Teradata commands ────────────────────────────────────────────────────────
 
 analyze-td *ARGS:
-    uv run python main.py --engine teradata analyze {{ ARGS }}
+    {{ cli }} --engine teradata analyze {{ ARGS }}
 
 seed-td database table rows:
-    uv run python main.py --engine teradata seed {{ database }} {{ table }} --rows {{ rows }}
+    {{ cli }} --engine teradata seed {{ database }} {{ table }} --rows {{ rows }}
 
 read-td database table limit:
-    uv run python main.py --engine teradata read {{ database }} {{ table }} --limit {{ limit }}
+    {{ cli }} --engine teradata read {{ database }} {{ table }} --limit {{ limit }}
 
 create-schema-td database:
-    uv run python main.py --engine teradata create-schema {{ database }}
+    {{ cli }} --engine teradata create-schema {{ database }}
 
 drop-schema-td database:
-    uv run python main.py --engine teradata drop-schema {{ database }}
+    {{ cli }} --engine teradata drop-schema {{ database }}
 
 seed-test-td database:
-    uv run python main.py --engine teradata seed-test {{ database }}
+    {{ cli }} --engine teradata seed-test {{ database }}

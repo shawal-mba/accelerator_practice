@@ -7,6 +7,16 @@ from typing import Any, Callable
 
 from faker import Faker
 
+_IDENT_RE = re.compile(r"^[a-zA-Z0-9_]+$")
+
+
+def _ident(name: str) -> str:
+    """Validate and return a SQL-safe identifier."""
+    if not _IDENT_RE.match(name):
+        raise ValueError(f"Invalid SQL identifier: {name!r}")
+    return name
+
+
 fake = Faker("zu_ZA")
 
 # Column-name keyword -> faker generator.
@@ -56,29 +66,65 @@ COLUMN_KEYWORD_MAP: list[tuple[str, Callable[[], Any]]] = [
     (r"lorem", fake.paragraph),
 ]
 
-# BigQuery type string -> faker generator fallback
-BQ_TYPE_MAP: dict[str, Callable[[], Any]] = {
-    "STRING": fake.word,
-    "BYTES": lambda: fake.binary(10).hex(),
-    "INTEGER": lambda: fake.pyint(min_value=0, max_value=100_000),
-    "INT64": lambda: fake.pyint(min_value=0, max_value=100_000),
-    "FLOAT": lambda: round(fake.pyfloat(min_value=0, max_value=10_000), 2),
-    "FLOAT64": lambda: round(fake.pyfloat(min_value=0, max_value=10_000), 2),
-    "NUMERIC": lambda: float(round(fake.pyfloat(min_value=0, max_value=10_000), 2)),
-    "BIGNUMERIC": lambda: float(round(fake.pyfloat(min_value=0, max_value=10_000), 2)),
-    "BOOL": fake.boolean,
-    "BOOLEAN": fake.boolean,
-    "DATE": lambda: fake.date_between(start_date="-5y", end_date="today").isoformat(),
-    "DATETIME": lambda: fake.date_time_between(start_date="-5y").isoformat(),
-    "TIMESTAMP": lambda: fake.date_time_between(start_date="-5y").isoformat(),
-    "TIME": lambda: fake.time_object().isoformat(),
-    "GEOGRAPHY": lambda: f"POINT({fake.longitude()} {fake.latitude()})",
-    "JSON": fake.json,
-    "RECORD": lambda: {},
-    "STRUCT": lambda: {},
-}
+
+def _build_bq_type_map() -> dict[str, Callable[[], Any]]:
+    """Build BigQuery type -> faker map from the google-cloud-bigquery library enums."""
+
+    def _int() -> int:
+        return fake.pyint(min_value=0, max_value=100_000)
+
+    def _float() -> float:
+        return round(fake.pyfloat(min_value=0, max_value=10_000), 2)
+
+    def _decimal() -> float:
+        return float(round(fake.pyfloat(min_value=0, max_value=10_000), 2))
+
+    def _ts() -> str:
+        return fake.date_time_between(start_date="-5y").isoformat()
+
+    def _date() -> str:
+        return fake.date_between(start_date="-5y", end_date="today").isoformat()
+
+    # Canonical generators keyed by SqlTypeNames values
+    canonical: dict[str, Callable[[], Any]] = {
+        "STRING": fake.word,
+        "BYTES": lambda: fake.binary(10).hex(),
+        "INTEGER": _int,
+        "FLOAT": _float,
+        "NUMERIC": _decimal,
+        "BIGNUMERIC": _decimal,
+        "BOOLEAN": fake.boolean,
+        "DATE": _date,
+        "DATETIME": _ts,
+        "TIMESTAMP": _ts,
+        "TIME": lambda: fake.time_object().isoformat(),
+        "GEOGRAPHY": lambda: f"POINT({fake.longitude()} {fake.latitude()})",
+        "RECORD": lambda: {},
+    }
+
+    # StandardSqlTypeNames aliases that differ from SqlTypeNames
+    aliases: dict[str, str] = {
+        "INT64": "INTEGER",
+        "FLOAT64": "FLOAT",
+        "BOOL": "BOOLEAN",
+        "STRUCT": "RECORD",
+        "JSON": "JSON",
+    }
+
+    result = dict(canonical)
+    for alias, target in aliases.items():
+        if target == "JSON":
+            result[alias] = fake.json
+        elif target in canonical:
+            result[alias] = canonical[target]
+
+    return result
+
+
+BQ_TYPE_MAP = _build_bq_type_map()
 
 # Teradata type code -> faker generator fallback
+# Type codes come from DBC.ColumnsV.ColumnType — not exposed by teradatasql.
 TD_TYPE_MAP: dict[str, Callable[[], Any]] = {
     "CF": fake.word,
     "CV": fake.word,
@@ -155,10 +201,26 @@ def match_column_td(col_name: str, td_type: str) -> Callable[[], Any]:
 
 # Teradata types that cannot be inserted via parameterized queries
 INLINE_TYPES = {
-    "TS", "OD", "TD", "TZ", "AT", "DA",
-    "YR", "MO", "DY", "HR", "MI", "SC",
-    "DM", "DV", "FD", "FS", "FT", "FY",
-    "PD", "PS",
+    "TS",
+    "OD",
+    "TD",
+    "TZ",
+    "AT",
+    "DA",
+    "YR",
+    "MO",
+    "DY",
+    "HR",
+    "MI",
+    "SC",
+    "DM",
+    "DV",
+    "FD",
+    "FS",
+    "FT",
+    "FY",
+    "PD",
+    "PS",
 }
 
 
@@ -171,8 +233,6 @@ def cast_td_value(col_name: str, td_type: str, value: Any) -> str:
         if isinstance(value, datetime):
             ts_str = value.strftime("%Y-%m-%d %H:%M:%S")
         elif isinstance(value, str):
-            # Handle ISO format strings from faker
-            # Remove microseconds and timezone info
             ts_str = value.replace("T", " ").split(".")[0].split("+")[0].split("Z")[0]
         else:
             ts_str = str(value)
@@ -194,9 +254,14 @@ def cast_td_value(col_name: str, td_type: str, value: Any) -> str:
             time_str = str(value)
         return f"CAST('{time_str}' AS TIME(0))"
     if td_type == "PD":
+        if not isinstance(value, tuple) or len(value) != 2:
+            raise ValueError(f"PD value must be a 2-tuple of dates, got {type(value).__name__}")
         d1, d2 = value
         return f"PERIOD(DATE '{d1}', DATE '{d2}')"
     if td_type == "PS":
+        if not isinstance(value, tuple) or len(value) != 2:
+            msg = f"PS value must be a 2-tuple of timestamps, got {type(value).__name__}"
+            raise ValueError(msg)
         t1, t2 = value
         if isinstance(t1, str):
             return f"PERIOD(TIMESTAMP '{t1}', TIMESTAMP '{t2}')"
