@@ -12,7 +12,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 from lib.bigquery import BigQueryDB
-from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort
+from lib.fk import discover_fk_map, resolve_fk_overrides, validate_fk_map
 from lib.format import (
     column_list,
     created,
@@ -26,6 +26,7 @@ from lib.format import (
     seed_result_table,
     success,
     table_list,
+    warning,
 )
 from lib.log import setup_file_log
 from lib.protocol import Database
@@ -141,12 +142,20 @@ def cmd_seed(args: argparse.Namespace) -> None:
             # Without this, seed would generate random FK values that violate
             # referential integrity and cause constraint violations on insert.
             fk_map = discover_fk_map(db, database, [args.table])
+            fk_map = validate_fk_map(db, database, fk_map)
             log.info("FK map for %s: %s", args.table, fk_map)
 
             parent_cache: dict[tuple[str, str], list[Any]] = {}
             fk_overrides = resolve_fk_overrides(
                 db, database, args.table, fk_map, parent_cache
             )
+            if fk_overrides is None:
+                log.warning("Skipping %s: parent table has no rows", args.table)
+                warning(
+                    f"Skipping {database}.{args.table}: parent table has no rows. "
+                    f"Seed the parent table first."
+                )
+                return
             if fk_overrides:
                 for col, vals in fk_overrides.items():
                     log.info("Resolved FK %s: %d parent values", col, len(vals))
@@ -172,20 +181,8 @@ def cmd_seed(args: argparse.Namespace) -> None:
 
             heading(f"Seeding all tables in {database}...")
 
-            # Discover FK relationships from database metadata and topo-sort
-            # so parents are always seeded before children.  This replaces
-            # the hardcoded SEED_ORDER / FK_MAP from test_schema with a
-            # generic approach that works for any schema.
-            seedable = [
-                t["table_name"]
-                for t in db.list_tables(database)
-            ]
-            fk_map = discover_fk_map(db, database, seedable)
-            ordered = topo_sort(seedable, fk_map)
-            log.info("Seed order: %s", ordered)
-            if fk_map:
-                log.info("FK map: %s", fk_map)
-
+            # seed_all discovers FKs from database metadata, topo-sorts
+            # tables, and seeds parents before children automatically.
             results = db.seed_all(database, num_rows=args.rows)
             seed_result_table(results)
 

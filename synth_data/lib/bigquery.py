@@ -10,7 +10,7 @@ from typing import Any
 from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import bigquery
 
-from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort
+from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
 from lib.matching import match_column_bq
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,20 @@ class BigQueryDB:
         for table in self.client.list_tables(f"{self.project}.{database}"):
             tables.append({"table_name": table.table_id, "table_type": table.table_type})
         return sorted(tables, key=lambda t: t["table_name"])
+
+    def table_exists(self, database: str, table: str) -> bool:
+        try:
+            self.client.get_table(f"{self.project}.{database}.{table}")
+            return True
+        except NotFound:
+            return False
+
+    def column_exists(self, database: str, table: str, column: str) -> bool:
+        try:
+            ref = self.client.get_table(f"{self.project}.{database}.{table}")
+            return any(f.name == column for f in ref.schema)
+        except NotFound:
+            return False
 
     def get_columns(self, database: str, table: str) -> Sequence[tuple[Any, ...]]:
         ref = self.client.get_table(f"{self.project}.{database}.{table}")
@@ -212,6 +226,7 @@ class BigQueryDB:
             if self._is_seedable(t)
         ]
         fk_map = discover_fk_map(self, database, seedable)
+        fk_map = validate_fk_map(self, database, fk_map)
         ordered = topo_sort(seedable, fk_map)
         parent_cache: dict[tuple[str, str], list[Any]] = {}
 
@@ -220,6 +235,10 @@ class BigQueryDB:
                 fk_overrides = resolve_fk_overrides(
                     self, database, name, fk_map, parent_cache
                 )
+                if fk_overrides is None:
+                    logger.info("Skipping %s: parent table has no rows", name)
+                    results.append((name, 0, "skipped (parent empty)"))
+                    continue
                 results.append(
                     self._seed_table(database, name, num_rows, fk_overrides)
                 )
@@ -243,7 +262,9 @@ class BigQueryDB:
                     self, database, table_id, fk_map, parent_cache
                 )
                 if fk_overrides is None:
-                    continue  # parent empty — skip
+                    logger.info("Skipping %s: parent table has no rows", table_id)
+                    results.append((table_id, 0, "skipped (parent empty)"))
+                    continue
                 results.append(self._seed_table(database, table_id, num_rows, fk_overrides))
             except (ValueError, RuntimeError) as exc:
                 logger.warning("Failed to seed %s: %s", table_id, exc)

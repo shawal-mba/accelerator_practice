@@ -38,6 +38,14 @@ class ForeignKeyReader(Protocol):
     ) -> list[dict[str, str]]: ...
 
 
+class TableExistenceChecker(Protocol):
+    """Minimal interface for checking table/column existence."""
+
+    def table_exists(self, database: str, table: str) -> bool: ...
+
+    def column_exists(self, database: str, table: str, column: str) -> bool: ...
+
+
 def resolve_fk_overrides(
     reader: ColumnReader,
     database: str,
@@ -84,6 +92,44 @@ def discover_fk_map(
                 for fk in fks
             }
     return fk_map
+
+
+def validate_fk_map(
+    checker: TableExistenceChecker,
+    database: str,
+    fk_map: dict[str, dict[str, tuple[str, str]]],
+) -> dict[str, dict[str, tuple[str, str]]]:
+    """Remove FK references whose parent table or column no longer exists.
+
+    FK metadata can become stale when tables or columns are dropped/renamed.
+    This function filters out broken references so that ``resolve_fk_overrides``
+    doesn't crash on non-existent tables.
+    """
+    import logging
+
+    log = logging.getLogger(__name__)
+    validated: dict[str, dict[str, tuple[str, str]]] = {}
+
+    for child, fks in fk_map.items():
+        valid_fks: dict[str, tuple[str, str]] = {}
+        for child_col, (parent_table, parent_col) in fks.items():
+            if not checker.table_exists(database, parent_table):
+                log.warning(
+                    "FK %s.%s -> %s.%s: parent table %s does not exist, skipping",
+                    child, child_col, parent_table, parent_col, parent_table,
+                )
+                continue
+            if not checker.column_exists(database, parent_table, parent_col):
+                log.warning(
+                    "FK %s.%s -> %s.%s: parent column %s does not exist, skipping",
+                    child, child_col, parent_table, parent_col, parent_col,
+                )
+                continue
+            valid_fks[child_col] = (parent_table, parent_col)
+        if valid_fks:
+            validated[child] = valid_fks
+
+    return validated
 
 
 def topo_sort(

@@ -9,7 +9,7 @@ from typing import Any
 
 import teradatasql
 
-from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort
+from lib.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
 from lib.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
 
 logger = logging.getLogger(__name__)
@@ -65,6 +65,23 @@ class TeradataDB:
                 [database],
             )
             return [{"table_name": row[0], "table_kind": row[1].strip()} for row in cur.fetchall()]
+
+    def table_exists(self, database: str, table: str) -> bool:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM DBC.TablesV WHERE DatabaseName = ? AND TableName = ?",
+                [database, table],
+            )
+            return cur.fetchone() is not None
+
+    def column_exists(self, database: str, table: str, column: str) -> bool:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM DBC.ColumnsV "
+                "WHERE DatabaseName = ? AND TableName = ? AND ColumnName = ?",
+                [database, table, column],
+            )
+            return cur.fetchone() is not None
 
     def get_columns(self, database: str, table: str) -> Sequence[tuple[Any, ...]]:
         with self.conn.cursor() as cur:
@@ -261,6 +278,7 @@ class TeradataDB:
             if self._is_seedable(t)
         ]
         fk_map = discover_fk_map(self, database, seedable)
+        fk_map = validate_fk_map(self, database, fk_map)
         ordered = topo_sort(seedable, fk_map)
         parent_cache: dict[tuple[str, str], list[Any]] = {}
 
@@ -269,6 +287,10 @@ class TeradataDB:
                 fk_overrides = resolve_fk_overrides(
                     self, database, name, fk_map, parent_cache
                 )
+                if fk_overrides is None:
+                    logger.info("Skipping %s: parent table has no rows", name)
+                    results.append((name, 0, "skipped (parent empty)"))
+                    continue
                 results.append(
                     self._seed_table(database, name, num_rows, fk_overrides)
                 )
@@ -292,6 +314,8 @@ class TeradataDB:
                     self, database, table_id, fk_map, parent_cache
                 )
                 if fk_overrides is None:
+                    logger.info("Skipping %s: parent table has no rows", table_id)
+                    results.append((table_id, 0, "skipped (parent empty)"))
                     continue
                 results.append(self._seed_table(database, table_id, num_rows, fk_overrides))
             except (ValueError, RuntimeError, teradatasql.DatabaseError) as exc:
