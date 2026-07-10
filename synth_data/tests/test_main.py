@@ -21,8 +21,15 @@ class TestApp:
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         cmds = (
-            "analyse", "seed", "read", "create-schema",
-            "drop-schema", "seed-test", "verify", "purge-data",
+            "analyse",
+            "analyse-all",
+            "seed",
+            "read",
+            "create-schema",
+            "drop-schema",
+            "seed-test",
+            "verify",
+            "purge-data",
         )
         for cmd in cmds:
             assert cmd in result.stdout

@@ -1,11 +1,4 @@
-"""Per-operation file logging.
-
-Each CLI invocation creates a timestamped log file under ``logs/`` so that
-FK discovery, topo-sort order, and per-table seed results are captured even
-when the console output is terse.
-
-Log files are auto-created and gitignored.
-"""
+"""Per-operation file logging."""
 
 from __future__ import annotations
 
@@ -17,30 +10,16 @@ LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 
 
 def setup_file_log(operation: str, engine: str, database: str) -> logging.Logger:
-    """Create a timestamped log file and return a logger that writes to it.
-
-    The file is named ``logs/{operation}_{engine}_{database}_{timestamp}.log``.
-    Existing handlers on the logger are replaced so that repeated calls
-    (e.g. when iterating over multiple databases) don't produce duplicate
-    log entries.
-    """
     LOG_DIR.mkdir(exist_ok=True)
-
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    filename = f"{operation}_{engine}_{database}_{ts}.log"
-    filepath = LOG_DIR / filename
-
+    filepath = LOG_DIR / f"{operation}_{engine}_{database}_{ts}.log"
     logger = logging.getLogger(f"synth_data.{operation}")
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
-
-    # Replace existing handlers to avoid duplicates when called multiple times.
     logger.handlers.clear()
-
     fh = logging.FileHandler(filepath)
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     logger.addHandler(fh)
-
     logger.info("Log file: %s", filepath)
     return logger

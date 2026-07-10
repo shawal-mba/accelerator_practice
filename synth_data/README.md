@@ -17,6 +17,7 @@ Generates realistic fake data with automatic referential integrity — no schema
 - **Rich CLI output** — panels, tables, and colour-coded results via Rich
 - **Per-operation logging** — every command writes to a timestamped log file under `logs/`
 - **Verify mode** — check referential integrity of seeded data
+- **Predefined test schemas** — create, seed, and drop test schemas (33 or 100 tables)
 
 ---
 
@@ -63,20 +64,37 @@ cp .env.example .env
 
 ## Usage
 
+All commands share common global options:
+
+```
+--engine, -e    bigquery | teradata  (required)
+--project       BigQuery project ID  (or GOOGLE_CLOUD_PROJECT env)
+--host          Teradata host        (or TERADATA_HOST env)
+--user          Teradata user        (or TERADATA_USER env)
+--database, -d  Default database     (or DATABASE env)
+--verbose, -v   Debug logging
+```
+
 ### Analyse — discover what's in the database
 
 ```bash
 synth --engine teradata analyse                     # list all databases
 synth --engine teradata analyse MY_DB               # list tables in a database
-synth --engine teradata analyse all                 # list tables in every database
 synth --engine bigquery analyse MY_DATASET          # list tables in a dataset
+```
+
+### Analyse all — summary across all databases
+
+```bash
+synth --engine teradata analyse-all                 # table counts per database
+synth --engine bigquery analyse-all                 # same for BigQuery datasets
 ```
 
 ### Seed — generate and insert fake data
 
 ```bash
 # Single table
-synth --engine teradata seed MY_DB my_table --rows 100
+synth --engine teradata seed MY_DB --table my_table --rows 100
 
 # All tables in a database (FK-aware: parents first)
 synth --engine teradata seed MY_DB --rows 100
@@ -85,7 +103,7 @@ synth --engine teradata seed MY_DB --rows 100
 synth --engine teradata seed all --rows 100
 
 # Save a report
-synth --engine teradata seed MY_DB --rows 100 --output report.txt
+synth --engine teradata seed MY_DB --table my_table --rows 100 --output report.txt
 ```
 
 ### Read — inspect data
@@ -108,7 +126,9 @@ synth --engine teradata purge-data MY_DB
 synth --engine teradata purge-data all
 ```
 
-### Test schema — create, seed, and drop predefined test tables
+### Predefined test schemas
+
+Create, seed, and drop test schemas with a single `--schema` flag:
 
 ```bash
 # Schema 1: 33 tables (basic test types + simple FK chain)
@@ -126,9 +146,9 @@ synth --engine teradata --schema 2 drop-schema MY_DB
 
 ```bash
 synth --engine teradata purge-data MY_DB
-synth --engine teradata create-schema MY_DB
-synth --engine teradata seed MY_DB --rows 100
-synth --engine teradata verify MY_DB
+synth --engine teradata create-schema MY_DB          # create test tables
+synth --engine teradata seed MY_DB --rows 100        # fill them with data
+synth --engine teradata verify MY_DB                 # verify FK integrity
 ```
 
 ---
@@ -192,7 +212,6 @@ just typecheck     # pyright
 just test          # pytest
 just check         # lint + typecheck + test
 just all           # format + check
-just words         # line count stats
 ```
 
 ---
@@ -201,7 +220,7 @@ just words         # line count stats
 
 ```
 src/
-  main.py              CLI entry point (click + rich)
+  main.py              CLI entry point (typer + rich)
   protocol.py          Database protocol (typing.Protocol)
   bigquery.py          BigQuery backend
   teradata.py          Teradata backend
@@ -209,13 +228,18 @@ src/
   fk.py                Shared foreign-key resolution + topological sort
   format.py            Rich console output (panels, tables)
   log.py               Per-operation file logging
-  test_schema.py       Schema 1: 33 test tables (basic types + FK chain)
-  test_schema_2.py     Schema 2: 100 ISP tables (customers, billing, network, support)
+schemas/
+  schema_loader.py     Loads schema definitions from JSON
+  schema_1.json        33 test tables (basic types + FK chain)
+  schema_2.json        100 ISP tables (customers, billing, network, support)
 tests/
-  test_synth_data.py   Unit tests for matching, casting, and schema logic
+  test_main.py         CLI app and helper tests
+  test_matching.py     Matching, casting, and formatting tests
+  test_schema_defs.py  Schema definition consistency tests
+  test_topo_sort.py    Topological sort tests
 ```
 
-Both `BigQueryDB` and `TeradataDB` implement the `Database` protocol, making it straightforward to add new backends.
+Both `BigQueryDB` and `TeradataDB` implement the `Database` protocol, making it straightforward to add new backends. Schema definitions live as JSON files under `schemas/` and are loaded by `schema_loader.py`.
 
 ---
 

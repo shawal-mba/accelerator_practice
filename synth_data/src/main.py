@@ -22,6 +22,7 @@ from src.format import (
     column_list,
     data_table,
     database_list,
+    database_summary,
     dataset_list,
     dim,
     error,
@@ -43,22 +44,10 @@ app = typer.Typer()
 ResultRow = tuple[str, int, str]
 
 
-# ── Exceptions ───────────────────────────────────────────────────────────────
+class SynthDataError(Exception): ...
 
 
-class SynthDataError(Exception):
-    ...
-
-
-class ConfigError(SynthDataError):
-    ...
-
-
-class TableError(SynthDataError):
-    ...
-
-
-# ── Shared context ────────────────────────────────────────────────────────────
+class ConfigError(SynthDataError): ...
 
 
 @dataclass
@@ -85,9 +74,6 @@ class CliContext:
         return "TABLE" if self.engine == "bigquery" else "T"
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-
 def _get_db(engine: str, project: str | None, host: str | None, user: str | None) -> Database:
     if engine == "bigquery":
         project = project or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
@@ -95,20 +81,17 @@ def _get_db(engine: str, project: str | None, host: str | None, user: str | None
             raise ConfigError(
                 "project is required for BigQuery. Pass --project or set GOOGLE_CLOUD_PROJECT."
             )
-        db: Database = BigQueryDB(project=project)
-    elif engine == "teradata":
+        return BigQueryDB(project=project)
+    if engine == "teradata":
         host = host or os.environ.get("TERADATA_HOST", "")
         user = user or os.environ.get("TERADATA_USER", "")
         password = os.environ.get("TERADATA_PASSWORD", "")
         if not all([host, user, password]):
             raise ConfigError(
-                "host, user, and password are required for Teradata. "
-                "Set TERADATA_HOST / TERADATA_USER / TERADATA_PASSWORD."
+                "host, user, and password are required for Teradata."
             )
-        db = TeradataDB(host=host, user=user, password=password)
-    else:
-        raise ConfigError(f"Unknown engine: {engine}")
-    return db
+        return TeradataDB(host=host, user=user, password=password)
+    raise ConfigError(f"Unknown engine: {engine}")
 
 
 def _resolve_databases(db: Database, database: str) -> list[str]:
@@ -124,9 +107,7 @@ def _format_column(col: Any, engine: str) -> str:
     return f"{col[0]} ({col[1]})"
 
 
-def _build_seed_report(
-    db: Database, database: str, results: list[ResultRow], engine: str
-) -> str:
+def _build_seed_report(db: Database, database: str, results: list[ResultRow], engine: str) -> str:
     buf = StringIO()
     total_inserted = 0
     for name, inserted, status in results:
@@ -148,16 +129,14 @@ def _write_report(
 ) -> None:
     if not output:
         return
-    report = _build_seed_report(db, database, results, engine)
     with open(output, "w") as f:
-        f.write(report)
+        f.write(_build_seed_report(db, database, results, engine))
     dim(f"\nReport written to {output}")
 
 
 def _setup_logging(verbose: bool) -> None:
-    level = logging.DEBUG if verbose else logging.WARNING
     logging.basicConfig(
-        level=level,
+        level=logging.DEBUG if verbose else logging.WARNING,
         format="%(levelname)s %(name)s: %(message)s",
         force=True,
     )
@@ -174,15 +153,11 @@ def _run_on_databases(
     database = c.require_database(database)
     with c.get_db() as db:
         for db_name in _resolve_databases(db, database):
-            log = setup_file_log(operation, c.engine, db_name)
-            log.info("%s %s", operation, db_name)
+            setup_file_log(operation, c.engine, db_name)
             heading(heading_template.format(db_name))
             args = [db_name, load_schema(schema_id)] if schema_id else [db_name]
             result = getattr(db, operation)(*args)
             success(f"{operation} {len(result)} tables in {db_name}")
-
-
-# ── CLI ──────────────────────────────────────────────────────────────────────
 
 
 @app.callback()
@@ -192,61 +167,59 @@ def cli(
     project: str = typer.Option(
         None, "--project", envvar="GOOGLE_CLOUD_PROJECT", help="BigQuery project ID"
     ),
-    host: str = typer.Option(
-        None, "--host", envvar="TERADATA_HOST", help="Teradata host"
-    ),
-    user: str = typer.Option(
-        None, "--user", envvar="TERADATA_USER", help="Teradata user"
-    ),
+    host: str = typer.Option(None, "--host", envvar="TERADATA_HOST", help="Teradata host"),
+    user: str = typer.Option(None, "--user", envvar="TERADATA_USER", help="Teradata user"),
     database: str = typer.Option(
         None, "--database", "-d", envvar="DATABASE", help="Default database/dataset"
     ),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable debug logging"),
 ) -> None:
-    """synth-data: synthetic data generator for Teradata and BigQuery."""
     if engine not in ("bigquery", "teradata"):
         raise typer.BadParameter("engine must be 'bigquery' or 'teradata'")
     ctx.obj = CliContext(
-        engine=engine,
-        project=project,
-        host=host,
-        user=user,
-        default_database=database,
+        engine=engine, project=project, host=host, user=user, default_database=database
     )
     _setup_logging(verbose)
 
 
 @app.command()
 def analyse(
-    ctx: typer.Context,
-    database: str = typer.Argument(None, help="Database/dataset or 'all'"),
+    ctx: typer.Context, database: str = typer.Argument(None, help="Database/dataset or 'all'")
 ) -> None:
-    """List databases or tables. Pass 'all' to list tables in every database."""
     c: CliContext = ctx.obj
     database = database or c.default_database
     with c.get_db() as db:
-        log = setup_file_log("analyse", c.engine, database or "all")
+        setup_file_log("analyse", c.engine, database or "all")
         if not database:
             datasets = db.list_databases()
-            log.info("Found %d databases", len(datasets))
             (dataset_list if c.engine == "bigquery" else database_list)(datasets)
         else:
-            iterable = db.list_databases() if database == "all" else [database]
-            for db_name in iterable:
+            for db_name in _resolve_databases(db, database):
                 tables = db.list_tables(db_name)
-                log.info("%s: %d tables", db_name, len(tables))
                 table_list(db_name, tables, kind_key=c.kind_key())
+
+
+@app.command(name="analyse-all")
+def analyse_all(ctx: typer.Context) -> None:
+    c: CliContext = ctx.obj
+    with c.get_db() as db:
+        kind_key = c.kind_key()
+        info: list[tuple[str, int, int]] = []
+        for db_name in db.list_databases():
+            tables = db.list_tables(db_name)
+            seedable = sum(1 for t in tables if t.get(kind_key) == c.table_type())
+            info.append((db_name, len(tables), seedable))
+        database_summary(info)
 
 
 @app.command()
 def seed(
     ctx: typer.Context,
     database: str = typer.Argument(None, help="Database/dataset or 'all'"),
-    table: str = typer.Argument(None, help="Table name (omit to seed all)"),
+    table: str = typer.Option(None, "--table", "-t", help="Table name (omit to seed all)"),
     rows: int = typer.Option(100, "--rows", help="Number of rows per table"),
     output: str = typer.Option(None, "--output", "-o", help="Write report to file"),
 ) -> None:
-    """Insert fake data into table(s)."""
     c: CliContext = ctx.obj
     database = c.require_database(database)
     with c.get_db() as db:
@@ -256,30 +229,24 @@ def seed(
                 setup_file_log("seed", c.engine, db_name)
                 columns = db.get_columns(db_name, table)
                 if not columns:
-                    console.print(f"[yellow]Skipping {db_name}.{table}: no columns[/yellow]")
                     all_results.append((f"{db_name}.{table}", 0, "no columns found"))
                     continue
-                fk_map = discover_fk_map(db, db_name, [table])
-                fk_map = validate_fk_map(db, db_name, fk_map)
+                fk_map = validate_fk_map(db, db_name, discover_fk_map(db, db_name, [table]))
                 parent_cache: dict[tuple[str, str], list[Any]] = {}
                 fk_overrides = resolve_fk_overrides(db, db_name, table, fk_map, parent_cache)
                 if fk_overrides is None:
-                    msg = f"[yellow]Skipping {db_name}.{table}: parent has no rows[/yellow]"
-                    console.print(msg)
                     all_results.append((f"{db_name}.{table}", 0, "skipped (parent empty)"))
                     continue
                 column_list(db_name, table, columns, engine=c.engine)
                 inserted = db.insert_fake_rows(
                     db_name, table, columns, num_rows=rows, fk_overrides=fk_overrides
                 )
-                success(f"\nInserted {inserted} rows into {db_name}.{table}")
                 all_results.append((f"{db_name}.{table}", inserted, "ok"))
             else:
                 setup_file_log("seed-all", c.engine, db_name)
                 heading(f"Seeding all tables in {db_name}...")
-                results = db.seed_all(db_name, num_rows=rows)
-                seed_result_table(results)
-                all_results.extend(results)
+                all_results.extend(db.seed_all(db_name, num_rows=rows))
+        seed_result_table(all_results)
         _write_report(output, db, database, all_results, c.engine)
 
 
@@ -290,7 +257,6 @@ def read(
     table: str = typer.Argument(..., help="Table name"),
     limit: int = typer.Option(20, "--limit", "-l", help="Max rows"),
 ) -> None:
-    """Read rows from a table."""
     c: CliContext = ctx.obj
     database = c.require_database(database)
     with c.get_db() as db:
@@ -307,10 +273,8 @@ def create_schema(
     database: str = typer.Argument(None, help="Database/dataset or 'all'"),
     schema_id: str = typer.Option("1", "--schema", help="Schema definition: 1 or 2"),
 ) -> None:
-    """Create test tables."""
-    c: CliContext = ctx.obj
     _run_on_databases(
-        c, database, "create_schema", "Creating test tables in {}", schema_id=schema_id
+        ctx.obj, database, "create_schema", "Creating test tables in {}", schema_id=schema_id
     )
 
 
@@ -320,21 +284,16 @@ def drop_schema(
     database: str = typer.Argument(None, help="Database/dataset or 'all'"),
     schema_id: str = typer.Option("1", "--schema", help="Schema definition: 1 or 2"),
 ) -> None:
-    """Drop test tables."""
-    c: CliContext = ctx.obj
     _run_on_databases(
-        c, database, "drop_schema", "Dropping test tables in {}", schema_id=schema_id
+        ctx.obj, database, "drop_schema", "Dropping test tables in {}", schema_id=schema_id
     )
 
 
 @app.command(name="purge-data")
 def purge_data(
-    ctx: typer.Context,
-    database: str = typer.Argument(None, help="Database/dataset or 'all'"),
+    ctx: typer.Context, database: str = typer.Argument(None, help="Database/dataset or 'all'")
 ) -> None:
-    """Delete all rows from every table."""
-    c: CliContext = ctx.obj
-    _run_on_databases(c, database, "purge_data", "Purging all data in {}")
+    _run_on_databases(ctx.obj, database, "purge_data", "Purging all data in {}")
 
 
 @app.command(name="seed-test")
@@ -344,18 +303,15 @@ def seed_test(
     schema_id: str = typer.Option("1", "--schema", help="Schema definition: 1 or 2"),
     output: str = typer.Option(None, "--output", "-o", help="Write report to file"),
 ) -> None:
-    """Seed test tables with referential integrity."""
     c: CliContext = ctx.obj
     database = c.require_database(database)
     schema = load_schema(schema_id)
-    SEED_ORDER = schema.SEED_ORDER
-    FK_MAP = schema.FK_MAP
     with c.get_db() as db:
         all_results: list[ResultRow] = []
         for db_name in _resolve_databases(db, database):
             setup_file_log("seed-test", c.engine, db_name)
             heading(f"Seeding test tables in {db_name} with referential integrity")
-            results = db.seed_with_relations(db_name, SEED_ORDER, FK_MAP)
+            results = db.seed_with_relations(db_name, schema.SEED_ORDER, schema.FK_MAP)
             seed_result_table(results)
             all_results.extend(results)
         _write_report(output, db, database, all_results, c.engine)
@@ -367,38 +323,35 @@ def verify(
     database: str = typer.Argument(None, help="Database/dataset"),
     schema_id: str = typer.Option("1", "--schema", help="Schema definition: 1 or 2"),
 ) -> None:
-    """Check referential integrity of seeded data."""
     c: CliContext = ctx.obj
     database = c.require_database(database)
     schema = load_schema(schema_id)
     with c.get_db() as db:
         for db_name in _resolve_databases(db, database):
-            log = setup_file_log("verify", c.engine, db_name)
+            setup_file_log("verify", c.engine, db_name)
             heading(f"Verifying FK integrity in {db_name}")
             tables = [
                 t["table_name"]
                 for t in db.list_tables(db_name)
                 if t.get(c.kind_key()) == c.table_type()
             ]
-            fk_map = discover_fk_map(db, db_name, tables)
-            fk_map = validate_fk_map(db, db_name, fk_map)
-            if not fk_map:
-                fk_map = {k: v for k, v in schema.FK_MAP.items() if k in set(tables)}
+            fk_map = validate_fk_map(db, db_name, discover_fk_map(db, db_name, tables)) or {
+                k: v for k, v in schema.FK_MAP.items() if k in set(tables)
+            }
             if not fk_map:
                 console.print(Panel("[dim]No foreign key relationships found.[/dim]"))
                 continue
-            result_table = RichTable(
+            t = RichTable(
                 title=f"FK Integrity \u2014 {db_name}",
                 show_header=True,
                 header_style="bold",
                 show_lines=False,
                 padding=(0, 2),
             )
-            result_table.add_column("Status", justify="center", width=6)
-            result_table.add_column("Child", style="bold")
-            result_table.add_column("Parent", style="dim")
-            result_table.add_column("Detail")
-
+            t.add_column("Status", justify="center", width=6)
+            t.add_column("Child", style="bold")
+            t.add_column("Parent", style="dim")
+            t.add_column("Detail")
             violations = 0
             checked = 0
             for child, fks in fk_map.items():
@@ -411,20 +364,24 @@ def verify(
                     ref_str = f"{parent_table}.{parent_col}"
                     if orphans:
                         sample = list(orphans)[:5]
-                        detail = f"{len(orphans)} orphan(s) (e.g. {sample})"
-                        result_table.add_row("[red]FAIL[/red]", fk_str, ref_str, detail)
-                        log.warning(
-                            "FK violation: %s -> %s: %d orphans", fk_str, ref_str, len(orphans)
+                        t.add_row(
+                            "[red]FAIL[/red]",
+                            fk_str,
+                            ref_str,
+                            f"{len(orphans)} orphan(s) (e.g. {sample})",
                         )
                         violations += 1
                     else:
-                        detail = f"{len(child_vals)} values, all valid"
-                        result_table.add_row("[green]OK[/green]", fk_str, ref_str, detail)
-            console.print(Panel(result_table, border_style="green" if not violations else "red"))
-            if violations:
-                error(f"{violations}/{checked} FK constraint(s) violated in {db_name}")
-            else:
-                success(f"{checked}/{checked} FK constraints valid in {db_name}")
+                        t.add_row(
+                            "[green]OK[/green]",
+                            fk_str,
+                            ref_str,
+                            f"{len(child_vals)} values, all valid",
+                        )
+            console.print(Panel(t, border_style="green" if not violations else "red"))
+            (error if violations else success)(
+                f"{checked}/{checked} FK constraints checked in {db_name}"
+            )
 
 
 def main() -> None:
@@ -432,12 +389,15 @@ def main() -> None:
         app()
     except typer.Exit:
         raise
-    except (ConfigError, TableError, SynthDataError) as exc:
+    except (ConfigError, SynthDataError) as exc:
         console.print(Panel(f"[bold red]{type(exc).__name__}:[/bold red]\n{exc}", title="Error"))
         raise SystemExit(1) from exc
     except Exception:
-        msg = f"[bold red]Unexpected error:[/bold red]\n{traceback.format_exc()}"
-        console.print(Panel(msg, title="Error"))
+        console.print(
+            Panel(
+                f"[bold red]Unexpected error:[/bold red]\n{traceback.format_exc()}", title="Error"
+            )
+        )
         raise SystemExit(1)
 
 

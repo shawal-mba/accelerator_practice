@@ -143,6 +143,7 @@ class TestFormatDate:
 class TestFormatTime:
     def test_time_object(self):
         from datetime import time as dt_time
+
         t = dt_time(10, 30, 0)
         assert _format_time(t) == "10:30:00"
 

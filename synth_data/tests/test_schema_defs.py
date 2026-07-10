@@ -45,12 +45,8 @@ class TestSchemaConsistency:
         bq_ids = {t["name"] for t in schema.BQ_TEST_TABLES}
         td_names = {t[0] for t in schema.TD_TEST_TABLES}
         order_set = {name for name, _ in schema.SEED_ORDER}
-        assert bq_ids <= order_set, (
-            f"BQ tables missing from SEED_ORDER: {bq_ids - order_set}"
-        )
-        assert td_names <= order_set, (
-            f"TD tables missing from SEED_ORDER: {td_names - order_set}"
-        )
+        assert bq_ids <= order_set, f"BQ tables missing from SEED_ORDER: {bq_ids - order_set}"
+        assert td_names <= order_set, f"TD tables missing from SEED_ORDER: {td_names - order_set}"
 
     def test_fk_map_points_to_valid_tables(self, schema):
         all_names = {t[0] for t in schema.TD_TEST_TABLES}

@@ -43,7 +43,7 @@ analyse engine database='':
 seed engine database table='' rows='100' output='':
     #!/usr/bin/env bash
     cmd="uv run synth --engine {{engine}} seed {{database}}"
-    [ -n "{{table}}" ] && cmd="$cmd {{table}}"
+    [ -n "{{table}}" ] && cmd="$cmd --table {{table}}"
     cmd="$cmd --rows {{rows}}"
     [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
     $cmd
