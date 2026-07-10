@@ -229,9 +229,7 @@ def seed(
 
                 columns = db.get_columns(db_name, table)
                 if not columns:
-                    console.print(
-                        f"[yellow]Skipping {db_name}.{table}: no columns found[/yellow]"
-                    )
+                    console.print(f"[yellow]Skipping {db_name}.{table}: no columns found[/yellow]")
                     all_results.append((f"{db_name}.{table}", 0, "no columns found"))
                     continue
 
@@ -244,14 +242,11 @@ def seed(
                 log.info("FK map for %s: %s", table, fk_map)
 
                 parent_cache: dict[tuple[str, str], list[Any]] = {}
-                fk_overrides = resolve_fk_overrides(
-                    db, db_name, table, fk_map, parent_cache
-                )
+                fk_overrides = resolve_fk_overrides(db, db_name, table, fk_map, parent_cache)
                 if fk_overrides is None:
                     log.warning("Skipping %s: parent table has no rows", table)
                     console.print(
-                        f"[yellow]Skipping {db_name}.{table}: "
-                        f"parent table has no rows.[/yellow]"
+                        f"[yellow]Skipping {db_name}.{table}: parent table has no rows.[/yellow]"
                     )
                     all_results.append((f"{db_name}.{table}", 0, "skipped (parent empty)"))
                     continue
@@ -392,9 +387,7 @@ def seed_test(ctx: click.Context, database: str | None, output: str | None) -> N
         all_results: list[tuple[str, int, str]] = []
         for db_name in _resolve_databases(db, database):
             log = setup_file_log("seed-test", engine, db_name)
-            log.info(
-                "Seeding test tables in %s with referential integrity", db_name
-            )
+            log.info("Seeding test tables in %s with referential integrity", db_name)
             log.info("Seed order: %s", [name for name, _ in SEED_ORDER])
             log.info("FK map: %s", FK_MAP)
 
@@ -445,11 +438,7 @@ def verify(ctx: click.Context, database: str | None) -> None:
 
             if not fk_map:
                 # FK metadata unavailable — fall back to hardcoded test-schema FKs
-                fk_map = {
-                    k: v
-                    for k, v in schema.FK_MAP.items()
-                    if k in set(tables)
-                }
+                fk_map = {k: v for k, v in schema.FK_MAP.items() if k in set(tables)}
 
             if not fk_map:
                 console.print(Panel("[dim]No foreign key relationships found.[/dim]"))
@@ -491,7 +480,10 @@ def verify(ctx: click.Context, database: str | None) -> None:
                         )
                         log.warning(
                             "FK violation: %s.%s -> %s.%s: %d orphans",
-                            child, child_col, parent_table, parent_col,
+                            child,
+                            child_col,
+                            parent_table,
+                            parent_col,
                             len(orphans),
                         )
                         violations += 1
@@ -504,7 +496,10 @@ def verify(ctx: click.Context, database: str | None) -> None:
                         )
                         log.info(
                             "FK ok: %s.%s -> %s.%s: %d values",
-                            child, child_col, parent_table, parent_col,
+                            child,
+                            child_col,
+                            parent_table,
+                            parent_col,
                             len(child_vals),
                         )
 
