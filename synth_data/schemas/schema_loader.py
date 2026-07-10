@@ -38,7 +38,7 @@ def _make_schema_field(f: dict) -> Any:
     return bigquery.SchemaField(**d)
 
 
-_VALID_IDS = {"1", "2"}
+_VALID_IDS = {"1", "2", "td"}
 
 
 def load(schema_id: str | int) -> SimpleNamespace:
