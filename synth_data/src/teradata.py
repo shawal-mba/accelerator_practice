@@ -278,8 +278,8 @@ class TeradataDB:
         metadata discovery returns nothing (e.g. on Teradata Vantage Express
         where ``DBC.ParentsV`` may not exist).
         """
-        from src.test_schema import FK_MAP as _FK_MAP
-        from src.test_schema import SEED_ORDER as _SEED_ORDER
+        from schemas.test_schema import FK_MAP as _FK_MAP
+        from schemas.test_schema import SEED_ORDER as _SEED_ORDER
 
         results: list[tuple[str, int, str]] = []
         seedable = [

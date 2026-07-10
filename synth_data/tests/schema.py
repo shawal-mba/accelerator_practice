@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-
-from src.test_schema import BQ_TEST_TABLES, FK_MAP, SEED_ORDER, TD_TEST_TABLES, _make_schema_field
+from schemas.test_schema import (
+    BQ_TEST_TABLES,
+    FK_MAP,
+    SEED_ORDER,
+    TD_TEST_TABLES,
+    _make_schema_field,
+)
 
 
 class TestMakeSchemaField:

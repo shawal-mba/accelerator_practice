@@ -34,6 +34,35 @@ install:
 build:
     uv build
 
+analyse engine database='':
+    #!/usr/bin/env bash
+    cmd="uv run synth --engine {{engine}} analyse"
+    [ -n "{{database}}" ] && cmd="$cmd {{database}}"
+    $cmd
+
+seed engine database table='' rows='100' output='':
+    #!/usr/bin/env bash
+    cmd="uv run synth --engine {{engine}} seed {{database}}"
+    [ -n "{{table}}" ] && cmd="$cmd {{table}}"
+    cmd="$cmd --rows {{rows}}"
+    [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
+    $cmd
+
+read engine database table limit='20':
+    uv run synth --engine {{engine}} read {{database}} {{table}} --limit {{limit}}
+
+create-schema engine database:
+    uv run synth --engine {{engine}} create-schema {{database}}
+
+drop-schema engine database:
+    uv run synth --engine {{engine}} drop-schema {{database}}
+
+seed-test engine database output='':
+    #!/usr/bin/env bash
+    cmd="uv run synth --engine {{engine}} seed-test {{database}}"
+    [ -n "{{output}}" ] && cmd="$cmd --output {{output}}"
+    $cmd
+
 auth:
     gcloud auth application-default login
 

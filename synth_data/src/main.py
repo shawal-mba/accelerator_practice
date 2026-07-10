@@ -8,7 +8,7 @@ import traceback
 from io import StringIO
 from typing import Any
 
-import click
+import typer
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
@@ -39,9 +39,11 @@ console = Console()
 
 logger = logging.getLogger(__name__)
 
+app = typer.Typer()
+
 SCHEMAS = {
-    "1": "src.test_schema",
-    "2": "src.test_schema_2",
+    "1": "schemas.test_schema",
+    "2": "schemas.test_schema_2",
 }
 
 
@@ -51,7 +53,8 @@ def _load_schema(schema_id: str) -> Any:
 
     module_path = SCHEMAS.get(schema_id)
     if not module_path:
-        raise click.UsageError(f"Unknown schema '{schema_id}'. Choose from: {', '.join(SCHEMAS)}")
+        valid = ", ".join(SCHEMAS)
+        raise typer.BadParameter(f"Unknown schema '{schema_id}'. Choose from: {valid}")
     return importlib.import_module(module_path)
 
 
@@ -142,47 +145,64 @@ def _setup_logging(verbose: bool) -> None:
     )
 
 
+def _require_database(database: str | None, ctx: typer.Context) -> str:
+    db = database or ctx.obj.get("default_database")
+    if not db:
+        raise typer.BadParameter("Missing argument 'DATABASE' or set DATABASE env var.")
+    return db
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 
-@click.group()
-@click.option("--engine", type=click.Choice(["bigquery", "teradata"]), required=True)
-@click.option("--project", envvar="GOOGLE_CLOUD_PROJECT", default=None)
-@click.option("--host", envvar="TERADATA_HOST", default=None)
-@click.option("--user", envvar="TERADATA_USER", default=None)
-@click.option("--database", envvar="DATABASE", default=None, help="Default database/dataset")
-@click.option("--schema", "schema_id", default="1", help="Test schema (1 or 2)")
-@click.option("-v", "--verbose", is_flag=True)
-@click.pass_context
+@app.callback()
 def cli(
-    ctx: click.Context,
-    engine: str,
-    project: str | None,
-    host: str | None,
-    user: str | None,
-    database: str | None,
-    schema_id: str,
-    verbose: bool,
+    ctx: typer.Context,
+    engine: str = typer.Option(..., "--engine", "-e", help="Engine: bigquery or teradata"),
+    project: str = typer.Option(
+        None, "--project", envvar="GOOGLE_CLOUD_PROJECT", help="BigQuery project ID"
+    ),
+    host: str = typer.Option(
+        None, "--host", envvar="TERADATA_HOST", help="Teradata host"
+    ),
+    user: str = typer.Option(
+        None, "--user", envvar="TERADATA_USER", help="Teradata user"
+    ),
+    database: str = typer.Option(
+        None, "--database", "-d", envvar="DATABASE", help="Default database/dataset"
+    ),
+    schema_id: str = typer.Option(
+        "1", "--schema", help="Test schema (1 or 2)"
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Enable debug logging"
+    ),
 ) -> None:
     """synth-data: synthetic data generator for Teradata and BigQuery."""
-    ctx.ensure_object(dict)
-    ctx.obj["engine"] = engine
-    ctx.obj["project"] = project
-    ctx.obj["host"] = host
-    ctx.obj["user"] = user
-    ctx.obj["default_database"] = database
-    ctx.obj["schema"] = _load_schema(schema_id)
+    if engine not in ("bigquery", "teradata"):
+        raise typer.BadParameter("engine must be 'bigquery' or 'teradata'")
+    ctx.obj = {
+        "engine": engine,
+        "project": project,
+        "host": host,
+        "user": user,
+        "default_database": database,
+        "schema": _load_schema(schema_id),
+    }
     _setup_logging(verbose)
 
 
-@cli.command()
-@click.argument("database", required=False, default=None)
-@click.pass_context
-def analyse(ctx: click.Context, database: str | None) -> None:
+@app.command()
+def analyse(
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset (or 'all' for all databases)"
+    ),
+) -> None:
     """List databases/datasets or tables. Pass 'all' to list tables in every database."""
-    database = database or ctx.obj.get("default_database")
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
+    database = database or ctx.obj.get("default_database")
     with db:
         log = setup_file_log("analyse", engine, database or "all")
         if not database:
@@ -205,19 +225,22 @@ def analyse(ctx: click.Context, database: str | None) -> None:
             table_list(database, tables, kind_key=kind_key)
 
 
-@cli.command()
-@click.argument("database", required=False, default=None)
-@click.argument("table", required=False, default=None)
-@click.option("--rows", default=100, help="Number of rows")
-@click.option("-o", "--output", default=None, help="Write report to file")
-@click.pass_context
+@app.command()
 def seed(
-    ctx: click.Context, database: str | None, table: str | None, rows: int, output: str | None
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset (or 'all' for all databases)"
+    ),
+    table: str = typer.Argument(
+        None, help="Table name (omit to seed all tables)"
+    ),
+    rows: int = typer.Option(100, "--rows", help="Number of rows"),
+    output: str = typer.Option(
+        None, "--output", "-o", help="Write report to file"
+    ),
 ) -> None:
     """Insert fake data into existing table(s). Pass 'all' as database to seed every database."""
-    database = database or ctx.obj.get("default_database")
-    if not database:
-        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
+    database = _require_database(database, ctx)
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
@@ -233,10 +256,6 @@ def seed(
                     all_results.append((f"{db_name}.{table}", 0, "no columns found"))
                     continue
 
-                # FK discovery: query the database metadata for foreign key
-                # constraints on this table so we can pull matching values
-                # from parent tables.  Without this, seed would generate
-                # random FK values that violate referential integrity.
                 fk_map = discover_fk_map(db, db_name, [table])
                 fk_map = validate_fk_map(db, db_name, fk_map)
                 log.info("FK map for %s: %s", table, fk_map)
@@ -268,8 +287,6 @@ def seed(
 
                 heading(f"Seeding all tables in {db_name}...")
 
-                # seed_all discovers FKs from database metadata, topo-sorts
-                # tables, and seeds parents before children automatically.
                 results = db.seed_all(db_name, num_rows=rows)
                 seed_result_table(results)
 
@@ -284,16 +301,17 @@ def seed(
             dim(f"\nReport written to {output}")
 
 
-@cli.command()
-@click.argument("database", required=False, default=None)
-@click.argument("table")
-@click.option("--limit", default=20, help="Max rows")
-@click.pass_context
-def read(ctx: click.Context, database: str | None, table: str, limit: int) -> None:
+@app.command()
+def read(
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset"
+    ),
+    table: str = typer.Argument(..., help="Table name"),
+    limit: int = typer.Option(20, "--limit", help="Max rows"),
+) -> None:
     """Read rows from a table."""
-    database = database or ctx.obj.get("default_database")
-    if not database:
-        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
+    database = _require_database(database, ctx)
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
@@ -306,14 +324,15 @@ def read(ctx: click.Context, database: str | None, table: str, limit: int) -> No
         dim(f"({len(rows)} rows)")
 
 
-@cli.command(name="create-schema")
-@click.argument("database", required=False, default=None)
-@click.pass_context
-def create_schema(ctx: click.Context, database: str | None) -> None:
+@app.command(name="create-schema")
+def create_schema(
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset (or 'all')"
+    ),
+) -> None:
     """Create test tables. Pass 'all' for every database."""
-    database = database or ctx.obj.get("default_database")
-    if not database:
-        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
+    database = _require_database(database, ctx)
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     schema = ctx.obj["schema"]
@@ -327,14 +346,15 @@ def create_schema(ctx: click.Context, database: str | None) -> None:
             created(len(created_tables))
 
 
-@cli.command(name="drop-schema")
-@click.argument("database", required=False, default=None)
-@click.pass_context
-def drop_schema(ctx: click.Context, database: str | None) -> None:
+@app.command(name="drop-schema")
+def drop_schema(
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset (or 'all')"
+    ),
+) -> None:
     """Drop all test tables. Pass 'all' for every database."""
-    database = database or ctx.obj.get("default_database")
-    if not database:
-        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
+    database = _require_database(database, ctx)
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     schema = ctx.obj["schema"]
@@ -348,14 +368,15 @@ def drop_schema(ctx: click.Context, database: str | None) -> None:
             dropped(len(dropped_tables))
 
 
-@cli.command(name="purge-data")
-@click.argument("database", required=False, default=None)
-@click.pass_context
-def purge_data(ctx: click.Context, database: str | None) -> None:
+@app.command(name="purge-data")
+def purge_data(
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset (or 'all')"
+    ),
+) -> None:
     """Delete all rows from every table. Pass 'all' to purge every database."""
-    database = database or ctx.obj.get("default_database")
-    if not database:
-        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
+    database = _require_database(database, ctx)
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     with db:
@@ -369,15 +390,18 @@ def purge_data(ctx: click.Context, database: str | None) -> None:
             log.info("Purged %d tables: %s", len(purged), purged)
 
 
-@cli.command(name="seed-test")
-@click.argument("database", required=False, default=None)
-@click.option("-o", "--output", default=None, help="Write report to file")
-@click.pass_context
-def seed_test(ctx: click.Context, database: str | None, output: str | None) -> None:
+@app.command(name="seed-test")
+def seed_test(
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset (or 'all')"
+    ),
+    output: str = typer.Option(
+        None, "--output", "-o", help="Write report to file"
+    ),
+) -> None:
     """Seed test tables with referential integrity. Pass 'all' for every database."""
-    database = database or ctx.obj.get("default_database")
-    if not database:
-        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
+    database = _require_database(database, ctx)
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     schema = ctx.obj["schema"]
@@ -406,18 +430,19 @@ def seed_test(ctx: click.Context, database: str | None, output: str | None) -> N
             dim(f"Report written to {output}")
 
 
-@cli.command()
-@click.argument("database", required=False, default=None)
-@click.pass_context
-def verify(ctx: click.Context, database: str | None) -> None:
+@app.command()
+def verify(
+    ctx: typer.Context,
+    database: str = typer.Argument(
+        None, help="Database/dataset"
+    ),
+) -> None:
     """Check referential integrity of seeded data.
 
     Discovers all FK relationships and verifies that every child value
     exists in the parent table. Reports orphaned rows.
     """
-    database = database or ctx.obj.get("default_database")
-    if not database:
-        raise click.UsageError("Missing argument 'DATABASE' or set DATABASE env var.")
+    database = _require_database(database, ctx)
     db = _get_db(ctx.obj["engine"], ctx.obj["project"], ctx.obj["host"], ctx.obj["user"])
     engine = ctx.obj["engine"]
     schema = ctx.obj["schema"]
@@ -437,7 +462,6 @@ def verify(ctx: click.Context, database: str | None) -> None:
             fk_map = validate_fk_map(db, db_name, fk_map)
 
             if not fk_map:
-                # FK metadata unavailable — fall back to hardcoded test-schema FKs
                 fk_map = {k: v for k, v in schema.FK_MAP.items() if k in set(tables)}
 
             if not fk_map:
@@ -448,7 +472,7 @@ def verify(ctx: click.Context, database: str | None) -> None:
             from rich.table import Table as RichTable
 
             result_table = RichTable(
-                title=f"FK Integrity — {db_name}",
+                title=f"FK Integrity \u2014 {db_name}",
                 show_header=True,
                 header_style="bold",
                 show_lines=False,
@@ -515,20 +539,13 @@ def verify(ctx: click.Context, database: str | None) -> None:
 
 def main() -> None:
     try:
-        cli(standalone_mode=False)
-    except click.exceptions.Abort:
-        dim("\nInterrupted.")
-    except click.exceptions.UsageError as exc:
-        console.print(Panel(f"[bold red]Usage error:[/bold red]\n{exc}", title="Error"))
-        raise SystemExit(1) from exc
-    except ConfigError as exc:
-        console.print(Panel(f"[bold red]Configuration error:[/bold red]\n{exc}", title="Error"))
-        raise SystemExit(1) from exc
-    except TableError as exc:
-        console.print(Panel(f"[bold red]Table error:[/bold red]\n{exc}", title="Error"))
-        raise SystemExit(1) from exc
-    except SynthDataError as exc:
-        console.print(Panel(f"[bold red]Error:[/bold red]\n{exc}", title="Error"))
+        app()
+    except typer.Exit:
+        raise
+    except (ConfigError, TableError, SynthDataError) as exc:
+        console.print(
+            Panel(f"[bold red]{type(exc).__name__}:[/bold red]\n{exc}", title="Error")
+        )
         raise SystemExit(1) from exc
     except Exception:
         console.print(

@@ -16,7 +16,7 @@ classifiers = [
 ]
 keywords = ["teradata", "bigquery", "gcp", "synthetic-data", "testing"]
 dependencies = [
-    "click>=8.1.0",
+    "typer>=0.15.0",
     "faker>=40.28.1",
     "google-cloud-bigquery>=3.25.0",
     "python-dotenv>=1.0.0",
