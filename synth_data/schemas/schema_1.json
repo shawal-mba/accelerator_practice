@@ -1,0 +1,1790 @@
+{
+  "BQ_TEST_TABLES": [
+    {
+      "name": "departments",
+      "columns": [
+        {
+          "name": "dept_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "dept_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "location",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "budget",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Company departments."
+    },
+    {
+      "name": "employees",
+      "columns": [
+        {
+          "name": "employee_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "first_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "last_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "email",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "phone",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "job_title",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "dept_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "manager_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "salary",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Employee records. manager_id references employees.employee_id (self-ref)."
+    },
+    {
+      "name": "product_categories",
+      "columns": [
+        {
+          "name": "category_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "category_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "description",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Product category lookup."
+    },
+    {
+      "name": "products",
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "product_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "category_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "base_price",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "launch_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "ISP products (fibre, wireless, etc.)."
+    },
+    {
+      "name": "service_plans",
+      "columns": [
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "plan_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "monthly_price",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "speed_mbps",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "data_cap_gb",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "contract_months",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Service plans tied to products."
+    },
+    {
+      "name": "plan_features",
+      "columns": [
+        {
+          "name": "feature_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "feature_name",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "feature_value",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Features included in each plan."
+    },
+    {
+      "name": "customers",
+      "columns": [
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "first_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "last_name",
+          "type": "STRING",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "email",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "phone",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "id_number",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "date_of_birth",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "signup_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "loyalty_tier",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer master table."
+    },
+    {
+      "name": "addresses",
+      "columns": [
+        {
+          "name": "address_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "street",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "city",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "province",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "postcode",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "country",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "latitude",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "longitude",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer service addresses."
+    },
+    {
+      "name": "customer_accounts",
+      "columns": [
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "account_number",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "opened_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "credit_limit",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer billing accounts."
+    },
+    {
+      "name": "sim_cards",
+      "columns": [
+        {
+          "name": "sim_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "iccid",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "msisdn",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "activated_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "SIM cards linked to accounts."
+    },
+    {
+      "name": "devices",
+      "columns": [
+        {
+          "name": "device_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "device_type",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "brand",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "model",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "serial_number",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "purchase_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "warranty_expiry",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer devices (routers, modems, phones)."
+    },
+    {
+      "name": "customer_subscriptions",
+      "columns": [
+        {
+          "name": "subscription_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "start_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "end_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "monthly_fee",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Active customer subscriptions."
+    },
+    {
+      "name": "towers",
+      "columns": [
+        {
+          "name": "tower_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "tower_name",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "latitude",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "longitude",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "tower_type",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "capacity_users",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "install_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Cell towers / access points."
+    },
+    {
+      "name": "tower_equipment",
+      "columns": [
+        {
+          "name": "equipment_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "tower_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "equipment_type",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "brand",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "model",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "serial_number",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "install_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Equipment installed at each tower."
+    },
+    {
+      "name": "tower_coverage",
+      "columns": [
+        {
+          "name": "coverage_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "tower_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "radius_km",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "signal_strength",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "frequency_band",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Coverage area per tower."
+    },
+    {
+      "name": "customer_connections",
+      "columns": [
+        {
+          "name": "connection_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "tower_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "connection_type",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "connected_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "monthly_data_gb",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Which account connects to which tower."
+    },
+    {
+      "name": "service_orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "order_type",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "requested_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "completed_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "assigned_agent_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "notes",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Service provisioning orders."
+    },
+    {
+      "name": "support_agents",
+      "columns": [
+        {
+          "name": "agent_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "first_name",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "last_name",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "email",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "department",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Support team agents."
+    },
+    {
+      "name": "support_tickets",
+      "columns": [
+        {
+          "name": "ticket_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "agent_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "subject",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "description",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "priority",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "resolved_at",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer support tickets."
+    },
+    {
+      "name": "ticket_comments",
+      "columns": [
+        {
+          "name": "comment_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "ticket_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "author",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "comment_text",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Comments on support tickets."
+    },
+    {
+      "name": "customer_ratings",
+      "columns": [
+        {
+          "name": "rating_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "ticket_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "score",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "feedback",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "rated_at",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer satisfaction ratings."
+    },
+    {
+      "name": "agent_skills",
+      "columns": [
+        {
+          "name": "skill_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "agent_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "category_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "proficiency",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Agent skills by product category."
+    },
+    {
+      "name": "data_usage",
+      "columns": [
+        {
+          "name": "usage_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "usage_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "data_mb",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "upload_mb",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "download_mb",
+          "type": "FLOAT64",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "peak_hours",
+          "type": "BOOLEAN",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Daily data usage per account."
+    },
+    {
+      "name": "call_logs",
+      "columns": [
+        {
+          "name": "call_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "call_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "duration_seconds",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "destination_number",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "call_type",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "cost",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Voice call records."
+    },
+    {
+      "name": "sms_logs",
+      "columns": [
+        {
+          "name": "sms_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "sms_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "destination_number",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "direction",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "cost",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "SMS records."
+    },
+    {
+      "name": "payment_methods",
+      "columns": [
+        {
+          "name": "method_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "method_type",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "card_last_four",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "is_default",
+          "type": "BOOLEAN",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "added_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer payment methods."
+    },
+    {
+      "name": "invoices",
+      "columns": [
+        {
+          "name": "invoice_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "invoice_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "due_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "total_amount",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "paid_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer invoices."
+    },
+    {
+      "name": "invoice_items",
+      "columns": [
+        {
+          "name": "item_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "invoice_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "description",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "quantity",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "unit_price",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "total",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Line items on invoices."
+    },
+    {
+      "name": "payments",
+      "columns": [
+        {
+          "name": "payment_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "invoice_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "method_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "amount",
+          "type": "NUMERIC",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "payment_date",
+          "type": "DATE",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "reference_number",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Payment transactions."
+    },
+    {
+      "name": "outages",
+      "columns": [
+        {
+          "name": "outage_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "tower_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "start_time",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "end_time",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "cause",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "severity",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Network outage incidents."
+    },
+    {
+      "name": "affected_customers",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "outage_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "account_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "impact_minutes",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "compensation_applied",
+          "type": "BOOLEAN",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customers affected by each outage."
+    },
+    {
+      "name": "notifications",
+      "columns": [
+        {
+          "name": "notification_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "channel",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "subject",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "body",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "sent_at",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "read_at",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Customer notifications (email, SMS, push)."
+    },
+    {
+      "name": "audit_log",
+      "columns": [
+        {
+          "name": "log_id",
+          "type": "INTEGER",
+          "mode": "REQUIRED"
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "action",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "table_name",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "old_value",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "new_value",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "changed_by",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "changed_at",
+          "type": "TIMESTAMP",
+          "mode": "NULLABLE"
+        }
+      ],
+      "description": "Audit trail for customer changes."
+    }
+  ],
+  "TD_TEST_TABLES": [
+    [
+      "departments",
+      "CREATE TABLE {db}.departments (\n            dept_id       INTEGER NOT NULL PRIMARY KEY,\n            dept_name     VARCHAR(100) NOT NULL,\n            location      VARCHAR(100),\n            budget        DECIMAL(12,2)\n        )",
+      "Company departments."
+    ],
+    [
+      "employees",
+      "CREATE TABLE {db}.employees (\n            employee_id   INTEGER NOT NULL PRIMARY KEY,\n            first_name    VARCHAR(50) NOT NULL,\n            last_name     VARCHAR(50) NOT NULL,\n            email         VARCHAR(100),\n            phone         VARCHAR(20),\n            job_title     VARCHAR(100),\n            dept_id       INTEGER REFERENCES {db}.departments(dept_id),\n            manager_id    INTEGER REFERENCES {db}.employees(employee_id),\n            hire_date     DATE,\n            salary        DECIMAL(12,2)\n        )",
+      "Employee records with self-referencing manager FK."
+    ],
+    [
+      "product_categories",
+      "CREATE TABLE {db}.product_categories (\n            category_id   INTEGER NOT NULL PRIMARY KEY,\n            category_name VARCHAR(100) NOT NULL,\n            description   VARCHAR(255)\n        )",
+      "Product category lookup."
+    ],
+    [
+      "products",
+      "CREATE TABLE {db}.products (\n            product_id    INTEGER NOT NULL PRIMARY KEY,\n            product_name  VARCHAR(100) NOT NULL,\n            category_id   INTEGER REFERENCES {db}.product_categories(category_id),\n            base_price    DECIMAL(10,2),\n            is_active     BYTEINT DEFAULT 1,\n            launch_date   DATE\n        )",
+      "ISP products."
+    ],
+    [
+      "service_plans",
+      "CREATE TABLE {db}.service_plans (\n            plan_id       INTEGER NOT NULL PRIMARY KEY,\n            plan_name     VARCHAR(100) NOT NULL,\n            product_id    INTEGER REFERENCES {db}.products(product_id),\n            monthly_price DECIMAL(10,2),\n            speed_mbps    INTEGER,\n            data_cap_gb   INTEGER,\n            contract_months INTEGER\n        )",
+      "Service plans tied to products."
+    ],
+    [
+      "plan_features",
+      "CREATE TABLE {db}.plan_features (\n            feature_id    INTEGER NOT NULL PRIMARY KEY,\n            plan_id       INTEGER REFERENCES {db}.service_plans(plan_id),\n            feature_name  VARCHAR(100),\n            feature_value VARCHAR(100)\n        )",
+      "Features included in each plan."
+    ],
+    [
+      "customers",
+      "CREATE TABLE {db}.customers (\n            customer_id   INTEGER NOT NULL PRIMARY KEY,\n            first_name    VARCHAR(50) NOT NULL,\n            last_name     VARCHAR(50) NOT NULL,\n            email         VARCHAR(100),\n            phone         VARCHAR(20),\n            id_number     VARCHAR(30),\n            date_of_birth DATE,\n            signup_date   DATE,\n            loyalty_tier  VARCHAR(20)\n        )",
+      "Customer master table."
+    ],
+    [
+      "addresses",
+      "CREATE TABLE {db}.addresses (\n            address_id    INTEGER NOT NULL PRIMARY KEY,\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            street        VARCHAR(150),\n            city          VARCHAR(100),\n            province      VARCHAR(100),\n            postcode      VARCHAR(10),\n            country       VARCHAR(50),\n            latitude      FLOAT,\n            longitude     FLOAT\n        )",
+      "Customer service addresses."
+    ],
+    [
+      "customer_accounts",
+      "CREATE TABLE {db}.customer_accounts (\n            account_id    INTEGER NOT NULL PRIMARY KEY,\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            account_number VARCHAR(30),\n            status        VARCHAR(20),\n            opened_date   DATE,\n            credit_limit  DECIMAL(12,2)\n        )",
+      "Customer billing accounts."
+    ],
+    [
+      "sim_cards",
+      "CREATE TABLE {db}.sim_cards (\n            sim_id        INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            iccid         VARCHAR(30),\n            msisdn        VARCHAR(20),\n            status        VARCHAR(20),\n            activated_date DATE\n        )",
+      "SIM cards linked to accounts."
+    ],
+    [
+      "devices",
+      "CREATE TABLE {db}.devices (\n            device_id     INTEGER NOT NULL PRIMARY KEY,\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            device_type   VARCHAR(50),\n            brand         VARCHAR(50),\n            model         VARCHAR(50),\n            serial_number VARCHAR(50),\n            purchase_date DATE,\n            warranty_expiry DATE\n        )",
+      "Customer devices."
+    ],
+    [
+      "customer_subscriptions",
+      "CREATE TABLE {db}.customer_subscriptions (\n            subscription_id INTEGER NOT NULL PRIMARY KEY,\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            plan_id       INTEGER REFERENCES {db}.service_plans(plan_id),\n            start_date    DATE,\n            end_date      DATE,\n            status        VARCHAR(20),\n            monthly_fee   DECIMAL(10,2)\n        )",
+      "Active customer subscriptions."
+    ],
+    [
+      "towers",
+      "CREATE TABLE {db}.towers (\n            tower_id      INTEGER NOT NULL PRIMARY KEY,\n            tower_name    VARCHAR(100),\n            latitude      FLOAT,\n            longitude     FLOAT,\n            tower_type    VARCHAR(50),\n            capacity_users INTEGER,\n            install_date  DATE,\n            status        VARCHAR(20)\n        )",
+      "Cell towers / access points."
+    ],
+    [
+      "tower_equipment",
+      "CREATE TABLE {db}.tower_equipment (\n            equipment_id  INTEGER NOT NULL PRIMARY KEY,\n            tower_id      INTEGER REFERENCES {db}.towers(tower_id),\n            equipment_type VARCHAR(50),\n            brand         VARCHAR(50),\n            model         VARCHAR(50),\n            serial_number VARCHAR(50),\n            install_date  DATE\n        )",
+      "Equipment installed at each tower."
+    ],
+    [
+      "tower_coverage",
+      "CREATE TABLE {db}.tower_coverage (\n            coverage_id   INTEGER NOT NULL PRIMARY KEY,\n            tower_id      INTEGER REFERENCES {db}.towers(tower_id),\n            radius_km     FLOAT,\n            signal_strength VARCHAR(20),\n            frequency_band VARCHAR(20)\n        )",
+      "Coverage area per tower."
+    ],
+    [
+      "customer_connections",
+      "CREATE TABLE {db}.customer_connections (\n            connection_id INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            tower_id      INTEGER REFERENCES {db}.towers(tower_id),\n            connection_type VARCHAR(30),\n            connected_date DATE,\n            monthly_data_gb FLOAT\n        )",
+      "Account-to-tower connections."
+    ],
+    [
+      "service_orders",
+      "CREATE TABLE {db}.service_orders (\n            order_id      INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            order_type    VARCHAR(50),\n            status        VARCHAR(20),\n            requested_date DATE,\n            completed_date DATE,\n            assigned_agent_id INTEGER,\n            notes         VARCHAR(500)\n        )",
+      "Service provisioning orders."
+    ],
+    [
+      "support_agents",
+      "CREATE TABLE {db}.support_agents (\n            agent_id      INTEGER NOT NULL PRIMARY KEY,\n            first_name    VARCHAR(50),\n            last_name     VARCHAR(50),\n            email         VARCHAR(100),\n            department    VARCHAR(50),\n            hire_date     DATE,\n            is_active     BYTEINT DEFAULT 1\n        )",
+      "Support team agents."
+    ],
+    [
+      "support_tickets",
+      "CREATE TABLE {db}.support_tickets (\n            ticket_id     INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            agent_id      INTEGER REFERENCES {db}.support_agents(agent_id),\n            subject       VARCHAR(200),\n            description   VARCHAR(2000),\n            priority      VARCHAR(20),\n            status        VARCHAR(20),\n            created_at    TIMESTAMP(0),\n            resolved_at   TIMESTAMP(0)\n        )",
+      "Customer support tickets."
+    ],
+    [
+      "ticket_comments",
+      "CREATE TABLE {db}.ticket_comments (\n            comment_id    INTEGER NOT NULL PRIMARY KEY,\n            ticket_id     INTEGER REFERENCES {db}.support_tickets(ticket_id),\n            author        VARCHAR(100),\n            comment_text  VARCHAR(2000),\n            created_at    TIMESTAMP(0)\n        )",
+      "Comments on support tickets."
+    ],
+    [
+      "customer_ratings",
+      "CREATE TABLE {db}.customer_ratings (\n            rating_id     INTEGER NOT NULL PRIMARY KEY,\n            ticket_id     INTEGER REFERENCES {db}.support_tickets(ticket_id),\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            score         INTEGER,\n            feedback      VARCHAR(500),\n            rated_at      TIMESTAMP(0)\n        )",
+      "Customer satisfaction ratings."
+    ],
+    [
+      "agent_skills",
+      "CREATE TABLE {db}.agent_skills (\n            skill_id      INTEGER NOT NULL PRIMARY KEY,\n            agent_id      INTEGER REFERENCES {db}.support_agents(agent_id),\n            category_id   INTEGER REFERENCES {db}.product_categories(category_id),\n            proficiency   VARCHAR(20)\n        )",
+      "Agent skills by product category."
+    ],
+    [
+      "data_usage",
+      "CREATE TABLE {db}.data_usage (\n            usage_id      INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            usage_date    DATE,\n            data_mb       FLOAT,\n            upload_mb     FLOAT,\n            download_mb   FLOAT,\n            peak_hours    BYTEINT\n        )",
+      "Daily data usage per account."
+    ],
+    [
+      "call_logs",
+      "CREATE TABLE {db}.call_logs (\n            call_id       INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            call_date     DATE,\n            duration_seconds INTEGER,\n            destination_number VARCHAR(20),\n            call_type     VARCHAR(20),\n            cost          DECIMAL(8,2)\n        )",
+      "Voice call records."
+    ],
+    [
+      "sms_logs",
+      "CREATE TABLE {db}.sms_logs (\n            sms_id        INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            sms_date      DATE,\n            destination_number VARCHAR(20),\n            direction     VARCHAR(10),\n            cost          DECIMAL(6,2)\n        )",
+      "SMS records."
+    ],
+    [
+      "payment_methods",
+      "CREATE TABLE {db}.payment_methods (\n            method_id     INTEGER NOT NULL PRIMARY KEY,\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            method_type   VARCHAR(30),\n            card_last_four VARCHAR(4),\n            is_default    BYTEINT DEFAULT 0,\n            added_date    DATE\n        )",
+      "Customer payment methods."
+    ],
+    [
+      "invoices",
+      "CREATE TABLE {db}.invoices (\n            invoice_id    INTEGER NOT NULL PRIMARY KEY,\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            invoice_date  DATE,\n            due_date      DATE,\n            total_amount  DECIMAL(12,2),\n            status        VARCHAR(20),\n            paid_date     DATE\n        )",
+      "Customer invoices."
+    ],
+    [
+      "invoice_items",
+      "CREATE TABLE {db}.invoice_items (\n            item_id       INTEGER NOT NULL PRIMARY KEY,\n            invoice_id    INTEGER REFERENCES {db}.invoices(invoice_id),\n            description   VARCHAR(200),\n            quantity      INTEGER,\n            unit_price    DECIMAL(10,2),\n            total         DECIMAL(12,2)\n        )",
+      "Line items on invoices."
+    ],
+    [
+      "payments",
+      "CREATE TABLE {db}.payments (\n            payment_id    INTEGER NOT NULL PRIMARY KEY,\n            invoice_id    INTEGER REFERENCES {db}.invoices(invoice_id),\n            method_id     INTEGER REFERENCES {db}.payment_methods(method_id),\n            amount        DECIMAL(12,2),\n            payment_date  DATE,\n            status        VARCHAR(20),\n            reference_number VARCHAR(50)\n        )",
+      "Payment transactions."
+    ],
+    [
+      "outages",
+      "CREATE TABLE {db}.outages (\n            outage_id     INTEGER NOT NULL PRIMARY KEY,\n            tower_id      INTEGER REFERENCES {db}.towers(tower_id),\n            start_time    TIMESTAMP(0),\n            end_time      TIMESTAMP(0),\n            cause         VARCHAR(200),\n            severity      VARCHAR(20),\n            status        VARCHAR(20)\n        )",
+      "Network outage incidents."
+    ],
+    [
+      "affected_customers",
+      "CREATE TABLE {db}.affected_customers (\n            id            INTEGER NOT NULL PRIMARY KEY,\n            outage_id     INTEGER REFERENCES {db}.outages(outage_id),\n            account_id    INTEGER REFERENCES {db}.customer_accounts(account_id),\n            impact_minutes INTEGER,\n            compensation_applied BYTEINT DEFAULT 0\n        )",
+      "Customers affected by each outage."
+    ],
+    [
+      "notifications",
+      "CREATE TABLE {db}.notifications (\n            notification_id INTEGER NOT NULL PRIMARY KEY,\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            channel       VARCHAR(20),\n            subject       VARCHAR(200),\n            body          VARCHAR(2000),\n            sent_at       TIMESTAMP(0),\n            read_at       TIMESTAMP(0)\n        )",
+      "Customer notifications."
+    ],
+    [
+      "audit_log",
+      "CREATE TABLE {db}.audit_log (\n            log_id        INTEGER NOT NULL PRIMARY KEY,\n            customer_id   INTEGER REFERENCES {db}.customers(customer_id),\n            action        VARCHAR(50),\n            table_name    VARCHAR(50),\n            old_value     VARCHAR(500),\n            new_value     VARCHAR(500),\n            changed_by    VARCHAR(100),\n            changed_at    TIMESTAMP(0)\n        )",
+      "Audit trail for customer changes."
+    ]
+  ],
+  "SEED_ORDER": [
+    [
+      "departments",
+      10
+    ],
+    [
+      "employees",
+      30
+    ],
+    [
+      "product_categories",
+      10
+    ],
+    [
+      "products",
+      20
+    ],
+    [
+      "service_plans",
+      15
+    ],
+    [
+      "plan_features",
+      30
+    ],
+    [
+      "customers",
+      50
+    ],
+    [
+      "addresses",
+      50
+    ],
+    [
+      "customer_accounts",
+      50
+    ],
+    [
+      "devices",
+      30
+    ],
+    [
+      "payment_methods",
+      30
+    ],
+    [
+      "notifications",
+      50
+    ],
+    [
+      "audit_log",
+      50
+    ],
+    [
+      "sim_cards",
+      40
+    ],
+    [
+      "customer_subscriptions",
+      40
+    ],
+    [
+      "customer_connections",
+      40
+    ],
+    [
+      "data_usage",
+      100
+    ],
+    [
+      "call_logs",
+      80
+    ],
+    [
+      "sms_logs",
+      80
+    ],
+    [
+      "invoices",
+      60
+    ],
+    [
+      "invoice_items",
+      100
+    ],
+    [
+      "payments",
+      80
+    ],
+    [
+      "towers",
+      15
+    ],
+    [
+      "tower_equipment",
+      30
+    ],
+    [
+      "tower_coverage",
+      20
+    ],
+    [
+      "support_agents",
+      10
+    ],
+    [
+      "agent_skills",
+      20
+    ],
+    [
+      "support_tickets",
+      50
+    ],
+    [
+      "ticket_comments",
+      100
+    ],
+    [
+      "customer_ratings",
+      40
+    ],
+    [
+      "service_orders",
+      40
+    ],
+    [
+      "outages",
+      15
+    ],
+    [
+      "affected_customers",
+      30
+    ]
+  ],
+  "FK_MAP": {
+    "employees": {
+      "dept_id": [
+        "departments",
+        "dept_id"
+      ],
+      "manager_id": [
+        "employees",
+        "employee_id"
+      ]
+    },
+    "products": {
+      "category_id": [
+        "product_categories",
+        "category_id"
+      ]
+    },
+    "service_plans": {
+      "product_id": [
+        "products",
+        "product_id"
+      ]
+    },
+    "plan_features": {
+      "plan_id": [
+        "service_plans",
+        "plan_id"
+      ]
+    },
+    "addresses": {
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ]
+    },
+    "customer_accounts": {
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ]
+    },
+    "sim_cards": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ]
+    },
+    "devices": {
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ]
+    },
+    "customer_subscriptions": {
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ],
+      "plan_id": [
+        "service_plans",
+        "plan_id"
+      ]
+    },
+    "tower_equipment": {
+      "tower_id": [
+        "towers",
+        "tower_id"
+      ]
+    },
+    "tower_coverage": {
+      "tower_id": [
+        "towers",
+        "tower_id"
+      ]
+    },
+    "customer_connections": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ],
+      "tower_id": [
+        "towers",
+        "tower_id"
+      ]
+    },
+    "service_orders": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ]
+    },
+    "support_tickets": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ],
+      "agent_id": [
+        "support_agents",
+        "agent_id"
+      ]
+    },
+    "ticket_comments": {
+      "ticket_id": [
+        "support_tickets",
+        "ticket_id"
+      ]
+    },
+    "customer_ratings": {
+      "ticket_id": [
+        "support_tickets",
+        "ticket_id"
+      ],
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ]
+    },
+    "agent_skills": {
+      "agent_id": [
+        "support_agents",
+        "agent_id"
+      ],
+      "category_id": [
+        "product_categories",
+        "category_id"
+      ]
+    },
+    "data_usage": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ]
+    },
+    "call_logs": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ]
+    },
+    "sms_logs": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ]
+    },
+    "payment_methods": {
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ]
+    },
+    "invoices": {
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ]
+    },
+    "invoice_items": {
+      "invoice_id": [
+        "invoices",
+        "invoice_id"
+      ]
+    },
+    "payments": {
+      "invoice_id": [
+        "invoices",
+        "invoice_id"
+      ],
+      "method_id": [
+        "payment_methods",
+        "method_id"
+      ]
+    },
+    "outages": {
+      "tower_id": [
+        "towers",
+        "tower_id"
+      ]
+    },
+    "affected_customers": {
+      "outage_id": [
+        "outages",
+        "outage_id"
+      ],
+      "account_id": [
+        "customer_accounts",
+        "account_id"
+      ]
+    },
+    "notifications": {
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ]
+    },
+    "audit_log": {
+      "customer_id": [
+        "customers",
+        "customer_id"
+      ]
+    }
+  }
+}

@@ -20,6 +20,7 @@ behaviour expected when seeding test data.
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict, deque
 from typing import Any, Protocol
 
@@ -105,8 +106,6 @@ def validate_fk_map(
     This function filters out broken references so that ``resolve_fk_overrides``
     doesn't crash on non-existent tables.
     """
-    import logging
-
     log = logging.getLogger(__name__)
     validated: dict[str, dict[str, tuple[str, str]]] = {}
 

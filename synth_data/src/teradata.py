@@ -9,6 +9,7 @@ from typing import Any
 
 import teradatasql
 
+from schemas.schema_loader import load as _load_schema
 from src.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
 from src.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
 
@@ -278,8 +279,9 @@ class TeradataDB:
         metadata discovery returns nothing (e.g. on Teradata Vantage Express
         where ``DBC.ParentsV`` may not exist).
         """
-        from schemas.test_schema import FK_MAP as _FK_MAP
-        from schemas.test_schema import SEED_ORDER as _SEED_ORDER
+        _schema = _load_schema("1")
+        _FK_MAP = _schema.FK_MAP
+        _SEED_ORDER = _schema.SEED_ORDER
 
         results: list[tuple[str, int, str]] = []
         seedable = [
@@ -346,7 +348,7 @@ class TeradataDB:
 
     def create_schema(self, database: str, schema_module: Any = None) -> list[str]:
         if schema_module is None:
-            from src import test_schema as schema_module
+            schema_module = _load_schema("1")
         TD_TEST_TABLES = schema_module.TD_TEST_TABLES
 
         db = ident(database)
@@ -376,7 +378,7 @@ class TeradataDB:
 
     def drop_schema(self, database: str, schema_module: Any = None) -> list[str]:
         if schema_module is None:
-            from src import test_schema as schema_module
+            schema_module = _load_schema("1")
         TD_TEST_TABLES = schema_module.TD_TEST_TABLES
 
         db = ident(database)

@@ -10,6 +10,7 @@ from typing import Any
 from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import bigquery
 
+from schemas.schema_loader import load as _load_schema
 from src.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
 from src.matching import match_column_bq
 
@@ -236,8 +237,9 @@ class BigQueryDB:
         hardcoded ``FK_MAP`` / ``SEED_ORDER`` when metadata discovery
         returns nothing.
         """
-        from schemas.test_schema import FK_MAP as _FK_MAP
-        from schemas.test_schema import SEED_ORDER as _SEED_ORDER
+        _schema = _load_schema("1")
+        _FK_MAP = _schema.FK_MAP
+        _SEED_ORDER = _schema.SEED_ORDER
 
         results: list[tuple[str, int, str]] = []
         seedable = [
@@ -303,7 +305,7 @@ class BigQueryDB:
 
     def create_schema(self, database: str, schema_module: Any = None) -> list[str]:
         if schema_module is None:
-            from src import test_schema as schema_module
+            schema_module = _load_schema("1")
         BQ_TEST_TABLES = schema_module.BQ_TEST_TABLES
         _make_schema_field = schema_module._make_schema_field
 
@@ -321,7 +323,7 @@ class BigQueryDB:
 
     def drop_schema(self, database: str, schema_module: Any = None) -> list[str]:
         if schema_module is None:
-            from src import test_schema as schema_module
+            schema_module = _load_schema("1")
         BQ_TEST_TABLES = schema_module.BQ_TEST_TABLES
 
         dropped: list[str] = []
@@ -343,8 +345,6 @@ class BigQueryDB:
         Tables are purged in reverse FK order (children first) so that
         parent-table deletes are not blocked by existing child rows.
         """
-        from src.fk import discover_fk_map, topo_sort, validate_fk_map
-
         tables = [
             t["table_name"]
             for t in self.list_tables(database)

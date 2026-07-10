@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from schemas.test_schema import (
-    BQ_TEST_TABLES,
-    FK_MAP,
-    SEED_ORDER,
-    TD_TEST_TABLES,
-    _make_schema_field,
-)
+from schemas.schema_loader import load as _load_schema
+
+_schema = _load_schema("1")
+BQ_TEST_TABLES = _schema.BQ_TEST_TABLES
+FK_MAP = _schema.FK_MAP
+SEED_ORDER = _schema.SEED_ORDER
+TD_TEST_TABLES = _schema.TD_TEST_TABLES
+_make_schema_field = _schema._make_schema_field
 
 
 class TestMakeSchemaField:

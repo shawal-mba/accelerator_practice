@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
+from datetime import date, datetime, timezone
+from datetime import time as dt_time
 from typing import Any
 
 from faker import Faker
@@ -219,8 +221,6 @@ INLINE_TYPES = frozenset({
 
 def _format_ts(value: Any) -> str:
     """Extract a TIMESTAMP string from a datetime or ISO string."""
-    from datetime import datetime, timezone
-
     if isinstance(value, datetime):
         if value.tzinfo is not None:
             value = value.astimezone(timezone.utc).replace(tzinfo=None)
@@ -238,8 +238,6 @@ def _format_ts(value: Any) -> str:
 
 def _format_date(value: Any) -> str:
     """Extract a DATE string from a date or ISO string."""
-    from datetime import date
-
     if isinstance(value, date):
         return value.strftime("%Y-%m-%d")
     if isinstance(value, str):
@@ -249,9 +247,6 @@ def _format_date(value: Any) -> str:
 
 def _format_time(value: Any) -> str:
     """Extract a TIME string from a time/datetime or string."""
-    from datetime import datetime
-    from datetime import time as dt_time
-
     if isinstance(value, (dt_time, datetime)):
         return value.strftime("%H:%M:%S")
     return str(value)
