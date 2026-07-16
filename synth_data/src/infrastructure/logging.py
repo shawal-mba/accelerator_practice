@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from pathlib import Path
 
-LOG_DIR = Path(__file__).resolve().parent.parent.parent / "logs"
+from src.infrastructure.settings import settings
 
 
 def setup_file_log(operation: str, engine: str, database: str) -> logging.Logger:
-    LOG_DIR.mkdir(exist_ok=True)
+    settings.log_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    filepath = LOG_DIR / f"{operation}_{engine}_{database}_{ts}.log"
+    filepath = settings.log_dir / f"{operation}_{engine}_{database}_{ts}.log"
     logger = logging.getLogger(f"synth_data.{operation}")
     logger.setLevel(logging.DEBUG)
     logger.propagate = False

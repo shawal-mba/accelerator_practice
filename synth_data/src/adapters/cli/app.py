@@ -14,6 +14,9 @@ from rich.panel import Panel
 from rich.table import Table as RichTable
 
 from schemas.schema_loader import load as load_schema
+from src.adapters.database.bigquery import BigQueryDB
+from src.adapters.database.teradata import TeradataDB
+from src.adapters.generator.faker import FakerAdapter
 from src.adapters.output.console import (
     column_list,
     data_table,
@@ -28,9 +31,31 @@ from src.adapters.output.console import (
     table_list,
 )
 from src.domain.fk import discover_fk_map, resolve_fk_overrides, validate_fk_map
+from src.domain.matching import set_generator
 from src.domain.ports import Database
-from src.infrastructure.config import ConfigError, get_db
+from src.infrastructure.config import ConfigError
 from src.infrastructure.logging import setup_file_log
+from src.infrastructure.settings import settings
+
+
+def get_db(engine: str, project: str | None, host: str | None, user: str | None) -> Database:
+    """Composition root — instantiate the correct Database adapter."""
+    if engine == "bigquery":
+        project = project or settings.bq_project
+        if not project:
+            raise ConfigError(
+                "project is required for BigQuery. Pass --project or set GOOGLE_CLOUD_PROJECT."
+            )
+        return BigQueryDB(project=project)
+    if engine == "teradata":
+        host = host or settings.td_host
+        user = user or settings.td_user
+        password = settings.td_password
+        if not all([host, user, password]):
+            raise ConfigError("host, user, and password are required for Teradata.")
+        return TeradataDB(host=host, user=user, password=password)
+    raise ConfigError(f"Unknown engine: {engine}")
+
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -357,6 +382,9 @@ def verify(
 
 
 def main() -> None:
+    # Composition root — wire adapters before any commands run.
+    set_generator(FakerAdapter(locale=settings.generator_locale))
+
     try:
         app()
     except typer.Exit:

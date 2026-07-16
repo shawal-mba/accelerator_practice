@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import os
+from unittest.mock import patch
 
 import pytest
 import typer
 from typer.testing import CliRunner
 
-from src.adapters.cli.app import CliContext, app
-from src.infrastructure.config import get_db
+from src.adapters.cli.app import CliContext, app, get_db
 
 runner = CliRunner()
 
@@ -79,15 +78,17 @@ class TestCliContext:
 
 
 class TestGetDb:
-    def test_bigquery_no_project_raises(self):
-        if "GOOGLE_CLOUD_PROJECT" in os.environ:
-            del os.environ["GOOGLE_CLOUD_PROJECT"]
+    @patch("src.adapters.cli.app.settings")
+    def test_bigquery_no_project_raises(self, mock_settings):
+        mock_settings.bq_project = ""
         with pytest.raises(Exception, match="project"):
             get_db("bigquery", project=None, host=None, user=None)
 
-    def test_teradata_no_host_raises(self):
-        for env_var in ("TERADATA_HOST", "TERADATA_USER", "TERADATA_PASSWORD"):
-            os.environ.pop(env_var, None)
+    @patch("src.adapters.cli.app.settings")
+    def test_teradata_no_host_raises(self, mock_settings):
+        mock_settings.td_host = ""
+        mock_settings.td_user = ""
+        mock_settings.td_password = ""
         with pytest.raises(Exception, match="host"):
             get_db("teradata", project=None, host=None, user=None)
 

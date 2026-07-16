@@ -34,7 +34,11 @@ def dim(text: str) -> None:
     console.print(text, style=_DIM)
 
 
-def _make_table(title: str, cols: list[tuple[str, str]], rows: list[list[str]]) -> None:
+def _make_table(
+    title: str,
+    cols: list[tuple[str, str] | tuple[str, str, str]],
+    rows: list[list[str]],
+) -> None:
     t = Table(
         title=title,
         title_style=_HEADING,
@@ -43,8 +47,11 @@ def _make_table(title: str, cols: list[tuple[str, str]], rows: list[list[str]]) 
         show_lines=False,
         padding=(0, 2),
     )
-    for label, style in cols:
-        t.add_column(label, style=style)
+    for col_spec in cols:
+        label = col_spec[0]
+        style = col_spec[1] if len(col_spec) > 1 else ""
+        justify = col_spec[2] if len(col_spec) > 2 else None
+        t.add_column(label, style=style or None, justify=justify)
     for row in rows:
         t.add_row(*row)
     console.print(Panel(t, border_style=_HEADING))
@@ -103,7 +110,7 @@ def seed_result_table(results: list[tuple[str, int, str]]) -> None:
             rows.append([name, "-", f"[red]{short}[/red]"])
     _make_table(
         f"Seed Results ({len(results)} tables)",
-        [("Table", _TABLE_NAME), ("Rows", "right"), ("Status", "")],
+        [("Table", _TABLE_NAME), ("Rows", "", "right"), ("Status", "")],
         rows,
     )
 
@@ -115,7 +122,7 @@ def database_summary(
     total_tables = sum(t for _, t, _ in databases)
     _make_table(
         f"Summary ({total_dbs} databases, {total_tables} tables)",
-        [("Database", _TABLE_NAME), ("Tables", "right"), ("Seedable", "right")],
+        [("Database", _TABLE_NAME), ("Tables", "", "right"), ("Seedable", "", "right")],
         [[d, str(t), str(s)] for d, t, s in databases],
     )
 
