@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.fk import topo_sort
+from src.domain.fk import topo_sort
 
 
 class TestTopoSort:

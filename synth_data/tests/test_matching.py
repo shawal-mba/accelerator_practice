@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 
 import pytest
 
-from src.matching import (
+from src.domain.matching import (
     INLINE_TYPES,
     _format_date,
     _format_time,

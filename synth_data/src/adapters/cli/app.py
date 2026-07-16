@@ -3,22 +3,18 @@
 from __future__ import annotations
 
 import logging
-import os
 import traceback
 from dataclasses import dataclass
 from io import StringIO
 from typing import Any
 
 import typer
-from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table as RichTable
 
 from schemas.schema_loader import load as load_schema
-from src.bigquery import BigQueryDB
-from src.fk import discover_fk_map, resolve_fk_overrides, validate_fk_map
-from src.format import (
+from src.adapters.output.console import (
     column_list,
     data_table,
     database_list,
@@ -31,11 +27,10 @@ from src.format import (
     success,
     table_list,
 )
-from src.log import setup_file_log
-from src.protocol import Database
-from src.teradata import TeradataDB
-
-load_dotenv()
+from src.domain.fk import discover_fk_map, resolve_fk_overrides, validate_fk_map
+from src.domain.ports import Database
+from src.infrastructure.config import ConfigError, get_db
+from src.infrastructure.logging import setup_file_log
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -45,9 +40,6 @@ ResultRow = tuple[str, int, str]
 
 
 class SynthDataError(Exception): ...
-
-
-class ConfigError(SynthDataError): ...
 
 
 @dataclass
@@ -65,33 +57,13 @@ class CliContext:
         return db
 
     def get_db(self) -> Database:
-        return _get_db(self.engine, self.project, self.host, self.user)
+        return get_db(self.engine, self.project, self.host, self.user)
 
     def kind_key(self) -> str:
         return "table_type" if self.engine == "bigquery" else "table_kind"
 
     def table_type(self) -> str:
         return "TABLE" if self.engine == "bigquery" else "T"
-
-
-def _get_db(engine: str, project: str | None, host: str | None, user: str | None) -> Database:
-    if engine == "bigquery":
-        project = project or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-        if not project:
-            raise ConfigError(
-                "project is required for BigQuery. Pass --project or set GOOGLE_CLOUD_PROJECT."
-            )
-        return BigQueryDB(project=project)
-    if engine == "teradata":
-        host = host or os.environ.get("TERADATA_HOST", "")
-        user = user or os.environ.get("TERADATA_USER", "")
-        password = os.environ.get("TERADATA_PASSWORD", "")
-        if not all([host, user, password]):
-            raise ConfigError(
-                "host, user, and password are required for Teradata."
-            )
-        return TeradataDB(host=host, user=user, password=password)
-    raise ConfigError(f"Unknown engine: {engine}")
 
 
 def _resolve_databases(db: Database, database: str) -> list[str]:

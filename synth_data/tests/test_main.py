@@ -8,7 +8,8 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from src.main import CliContext, _get_db, app
+from src.adapters.cli.app import CliContext, app
+from src.infrastructure.config import get_db
 
 runner = CliRunner()
 
@@ -82,14 +83,14 @@ class TestGetDb:
         if "GOOGLE_CLOUD_PROJECT" in os.environ:
             del os.environ["GOOGLE_CLOUD_PROJECT"]
         with pytest.raises(Exception, match="project"):
-            _get_db("bigquery", project=None, host=None, user=None)
+            get_db("bigquery", project=None, host=None, user=None)
 
     def test_teradata_no_host_raises(self):
         for env_var in ("TERADATA_HOST", "TERADATA_USER", "TERADATA_PASSWORD"):
             os.environ.pop(env_var, None)
         with pytest.raises(Exception, match="host"):
-            _get_db("teradata", project=None, host=None, user=None)
+            get_db("teradata", project=None, host=None, user=None)
 
     def test_invalid_engine_raises(self):
         with pytest.raises(Exception, match="engine"):
-            _get_db("invalid", project=None, host=None, user=None)
+            get_db("invalid", project=None, host=None, user=None)

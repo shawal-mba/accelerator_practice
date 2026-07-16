@@ -10,8 +10,8 @@ from typing import Any
 import teradatasql
 
 from schemas.schema_loader import load as _load_schema
-from src.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
-from src.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
+from src.domain.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
+from src.domain.matching import INLINE_TYPES, cast_td_value, ident, match_column_td
 
 logger = logging.getLogger(__name__)
 

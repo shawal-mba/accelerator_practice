@@ -4,24 +4,13 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict, deque
-from typing import Any, Protocol
+from typing import Any
 
-
-class _ColumnReader(Protocol):
-    def read_column_values(self, database: str, table: str, column: str) -> list[Any]: ...
-
-
-class _FKReader(Protocol):
-    def get_foreign_keys(self, database: str, table: str) -> list[dict[str, str]]: ...
-
-
-class _TableChecker(Protocol):
-    def table_exists(self, database: str, table: str) -> bool: ...
-    def column_exists(self, database: str, table: str, column: str) -> bool: ...
+from src.domain.ports import Database
 
 
 def resolve_fk_overrides(
-    reader: _ColumnReader,
+    reader: Database,
     database: str,
     table_id: str,
     fk_map: dict[str, dict[str, tuple[str, str]]],
@@ -39,7 +28,7 @@ def resolve_fk_overrides(
 
 
 def discover_fk_map(
-    reader: _FKReader,
+    reader: Database,
     database: str,
     tables: list[str],
 ) -> dict[str, dict[str, tuple[str, str]]]:
@@ -52,7 +41,7 @@ def discover_fk_map(
 
 
 def validate_fk_map(
-    checker: _TableChecker,
+    checker: Database,
     database: str,
     fk_map: dict[str, dict[str, tuple[str, str]]],
 ) -> dict[str, dict[str, tuple[str, str]]]:

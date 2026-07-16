@@ -11,8 +11,8 @@ from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import bigquery
 
 from schemas.schema_loader import load as _load_schema
-from src.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
-from src.matching import match_column_bq
+from src.domain.fk import discover_fk_map, resolve_fk_overrides, topo_sort, validate_fk_map
+from src.domain.matching import match_column_bq
 
 logger = logging.getLogger(__name__)
 
